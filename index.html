@@ -1,0 +1,499 @@
+<!doctype html><html><head><meta name="theme-color" content="#1D5C86"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Ипотека"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon-192.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ипотечные банки</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=PT+Serif:wght@700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: tabs → bank chips → card (tiles, rate calc, section chips, collapsible sections) */
+:root{
+  --bg:#EEF2F1;--surface:#FFFFFF;--ink:#18282C;--muted:#5A6B6F;--line:#D3DCDB;
+  --accent:#1D5C86;--accent-soft:#E2EDF4;--good:#1F7A4D;--good-soft:#E3F2E9;--bad:#B3261E;--bad-soft:#FBE3E1;--warn:#A35A00;--warn-soft:#FBEEDC;--disc:#6B3FA0;--disc-soft:#EEE5F8;
+  --display:"PT Serif",Georgia,serif;--body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111A1C;--surface:#18252A;--ink:#E4ECEB;--muted:#93A5A8;--line:#2C3D42;--accent:#7DB6DD;--accent-soft:#1B3343;--good:#6CC79A;--good-soft:#163227;--bad:#F08A80;--bad-soft:#3D1D1A;--warn:#E3A657;--warn-soft:#3A2A14;--disc:#C3A4EC;--disc-soft:#2C2140;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111A1C;--surface:#18252A;--ink:#E4ECEB;--muted:#93A5A8;--line:#2C3D42;--accent:#7DB6DD;--accent-soft:#1B3343;--good:#6CC79A;--good-soft:#163227;--bad:#F08A80;--bad-soft:#3D1D1A;--warn:#E3A657;--warn-soft:#3A2A14;--disc:#C3A4EC;--disc-soft:#2C2140;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:24px 48px}
+.wrap{max-width:1000px;margin:0 auto;display:grid;gap:16px}
+header{display:grid;gap:4px}
+h1{font-family:var(--display);font-size:clamp(26px,4vw,34px);line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0}
+.draft{justify-self:start;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:2px 8px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{appearance:none;border:1px solid var(--line);background:var(--surface);font:600 14.5px var(--body);color:var(--muted);padding:9px 14px;cursor:pointer;border-radius:8px}
+.tab[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+button:focus-visible,select:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;font:600 13.5px var(--body);color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chip.empty{color:var(--muted);font-weight:500}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;display:grid;gap:18px;min-width:0}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.head h2{font-family:var(--display);font-size:28px;margin:0}
+.upd{font-size:13px;color:var(--muted)}
+.alert{background:var(--warn-soft);color:var(--ink);border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--bg);border-radius:9px;padding:12px 14px;display:grid;gap:2px;align-content:start}
+.tile .l{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tile .v{font:600 22px var(--mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--muted)}
+.tile.main{background:var(--disc-soft)}.tile.main .v{color:var(--disc)}
+.rate{background:var(--disc-soft);border-radius:10px;padding:16px;display:grid;gap:12px}
+.rate h3{color:var(--disc);font-size:17px;margin:0}
+.rate-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+@media (max-width:720px){.rate-grid{grid-template-columns:1fr}}
+.rate select{font:inherit;padding:7px 9px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;margin-top:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:5px 0;cursor:pointer;font-size:14.5px}
+.opt input{margin-top:4px;width:16px;height:16px;accent-color:var(--disc);flex:none}
+.opt .d{font-family:var(--mono);font-weight:600;white-space:nowrap;margin-left:auto}
+.opt .d.m{color:var(--good)}.opt .d.p{color:var(--bad)}
+.opt small{display:block;color:var(--muted);font-size:12.5px}
+.result{background:var(--surface);border-radius:9px;padding:14px;display:grid;gap:6px;align-content:start}
+.result .big{font:600 34px var(--mono);color:var(--disc);letter-spacing:-.02em}
+.result .f{font-family:var(--mono);font-size:13px;color:var(--muted);word-break:break-word}
+.rnote{font-size:13.5px}
+.sec{display:grid;gap:8px;padding-top:14px;border-top:1px solid var(--line);min-width:0}
+.sec h3{font-size:17px;margin:0;color:var(--accent)}
+.sec.ask{background:var(--bad-soft);border:0;border-radius:9px;padding:12px 16px}
+.sec.ask h3{color:var(--bad)}
+ul{margin:0;padding-left:18px;display:grid;gap:4px}
+details{background:var(--bg);border-radius:9px}
+summary{cursor:pointer;list-style:none;padding:10px 14px;display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-weight:600}
+summary::-webkit-details-marker{display:none}
+summary .nm::before{content:"▸ ";color:var(--accent)}
+details[open] summary .nm::before{content:"▾ "}
+summary.leaf{cursor:default}summary.leaf .nm::before{content:"• "}
+summary .rt{font-family:var(--mono);font-weight:600;color:var(--accent);white-space:nowrap}
+details .body{padding:0 14px 12px 32px;display:grid;gap:8px;min-width:0}
+.tblw{overflow-x:auto}
+table.mini{border-collapse:collapse;font-size:14px}
+table.mini td,table.mini th{padding:3px 14px 3px 0;text-align:left;border-bottom:1px solid var(--line)}
+table.mini th{font-size:12px;color:var(--muted);text-transform:uppercase}
+table.mini td:not(:first-child){font-family:var(--mono)}
+.objs{display:flex;flex-wrap:wrap;gap:6px}
+.obj{background:var(--bg);border-radius:6px;padding:4px 10px;font-weight:500}
+.tag{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
+.tag.q{color:var(--bad);border-color:var(--bad)}
+.none{color:var(--muted);font-style:italic;font-size:14px}
+.cmp{display:grid;gap:10px}
+.cmp-row{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:8px}
+.cmp-row h4{margin:0;font-size:16px}
+.pick-res{display:grid;gap:10px}
+.rcard{display:grid;gap:4px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:9px;padding:12px 14px}
+.rcard.part{border-left-color:var(--warn)}
+.rcard .top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px}
+.rcard .mono{font-family:var(--mono);font-weight:600}
+.linkbtn{appearance:none;border:0;background:none;color:var(--accent);font:600 13.5px var(--body);cursor:pointer;padding:0;text-decoration:underline;justify-self:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+table.cmpt{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+table.cmpt th,table.cmpt td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.cmpt th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--surface)}
+table.cmpt th.sorted{color:var(--accent)}
+table.cmpt td:first-child{font-weight:600;white-space:nowrap}
+table.cmpt td.best{background:var(--good-soft);color:var(--good);font-weight:700}
+table.cmpt td.no{color:var(--bad)}table.cmpt td.q{color:var(--bad);font-weight:700}
+table.cmpt tr:hover td{background:var(--bg)}
+table.cmpt .bk{appearance:none;border:0;background:none;font:600 13.5px var(--body);color:var(--accent);cursor:pointer;padding:0;text-align:left}
+.dform{display:grid;gap:14px}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0;display:grid;gap:8px;min-width:0}
+legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 6px}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:600;min-width:0}
+label.f input,label.f select{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;min-width:0}
+.ck{display:flex;gap:8px;align-items:center;font-size:14.5px;cursor:pointer}
+.ck input{width:16px;height:16px;accent-color:var(--accent)}
+.dsum{background:var(--accent-soft);border-radius:9px;padding:10px 14px;font-size:14px}
+.dcard{display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:9px;padding:12px 16px}
+.dcard.part{border-left-color:var(--warn)}.dcard.no{border-left-color:var(--bad);opacity:.85}
+.dcard .top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;align-items:baseline}
+.dcard .nums{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.dcard .nums b{font-family:var(--mono)}
+.dcard .rbig{font:600 22px var(--mono);color:var(--disc)}
+.dcard .why{font-size:13.5px;color:var(--muted)}
+.dcard .why.bad{color:var(--bad)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.bad{background:var(--bad-soft);color:var(--bad)}
+footer{color:var(--muted);font-size:12.5px;display:grid;gap:6px}
+.copyright{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;max-width:90ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="draft">Черновик — данные на проверке</span>
+    <h1>Ипотечные банки</h1>
+    <p class="sub">Условия банков, работающих в Красноярске. Пометка <span class="tag">ваши данные</span> — из вашей таблицы и анкеты, без пометки — из материалов банка, <span class="tag q">уточнить</span> — неясно или противоречит.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-bank" aria-selected="true">Банки</button>
+    <button class="tab" role="tab" id="t-tbl" aria-selected="false">Сравнение</button>
+    <button class="tab" role="tab" id="t-sec" aria-selected="false">Раздел по всем банкам</button>
+    <button class="tab" role="tab" id="t-pick" aria-selected="false">Подбор</button>
+  </div>
+
+  <section id="p-bank" class="wrap" style="gap:14px">
+    <div class="chips" id="bank-chips"></div>
+    <article class="card" id="card"></article>
+  </section>
+
+  <section id="p-tbl" class="panel" hidden>
+    <div class="chips" id="tbl-chips"></div>
+    <div class="tblw"><table class="cmpt" id="tbl"></table></div>
+    <p class="none" style="margin:0">Нажмите на заголовок столбца, чтобы отсортировать. Зелёным — лучшая ставка в столбце. «?» — уточнить, пусто — нет данных.</p>
+  </section>
+
+  <section id="p-sec" class="wrap" style="gap:14px" hidden>
+    <div class="chips" id="sec-chips"></div>
+    <div class="cmp" id="sec-out"></div>
+  </section>
+
+  <section id="p-pick" class="panel" hidden>
+    <div class="chips" id="mode"><button class="chip" data-m="quick" aria-pressed="true">Быстрый</button><button class="chip" data-m="full" aria-pressed="false">Детальный</button></div>
+    <div id="m-quick" style="display:grid;gap:14px">
+      <div><div class="lbl">Объект</div><div class="chips" id="f-objects"></div></div>
+      <div><div class="lbl">Клиент</div><div class="chips" id="f-clients"></div></div>
+      <div><div class="lbl">Программа и условия</div><div class="chips" id="f-progs"></div></div>
+      <div class="pick-res" id="pick-out"></div>
+    </div>
+    <div id="m-full" hidden style="display:grid;gap:16px">
+      <form class="dform" id="dform" onsubmit="return false">
+        <fieldset><legend>Программа</legend>
+          <label class="f">Программа<select id="d-prog">
+            <option value="sec">Вторичка (рыночная)</option><option value="new">Новостройка (рыночная)</option><option value="sem">Семейная</option><option value="it">IT</option><option value="dv">Дальневосточная / арктическая</option><option value="ref">Рефинансирование</option><option value="zal">Кредит под залог</option></select></label>
+        </fieldset>
+        <fieldset><legend>Клиент</legend>
+          <div class="frow">
+            <label class="f">Гражданство<select id="d-cit"><option value="rf">РФ</option><option value="by">Беларусь</option><option value="other">Другое</option></select></label>
+            <label class="f">Возраст сейчас<input id="d-age" type="number" min="18" max="90" value="35"></label>
+            <label class="f">Занятость<select id="d-emp"><option value="emp">Найм</option><option value="self">Самозанятый</option><option value="ip">ИП</option><option value="biz">Собственник бизнеса</option></select></label>
+            <label class="f"><span id="d-mon-l">Стаж на текущем месте, мес.</span><input id="d-mon" type="number" min="0" value="12"></label>
+          </div>
+          <div class="frow">
+            <label class="f">Зарплатный клиент банка<select id="d-zp"><option value="">нет</option></select></label>
+          </div>
+          <label class="ck"><input type="checkbox" id="d-inc" checked> Доход подтверждён официально (СФР, 2-НДФЛ, справка о доходах НПД)</label>
+        </fieldset>
+        <fieldset id="d-fam"><legend>Семья</legend>
+          <div class="frow"><label class="f">Детей<input id="d-kids" type="number" min="0" max="10" value="1"></label></div>
+          <label class="ck"><input type="checkbox" id="d-young" checked> Есть ребёнок до 7 лет</label>
+          <label class="ck"><input type="checkbox" id="d-inv"> Есть ребёнок-инвалид до 18 лет</label>
+        </fieldset>
+        <fieldset><legend>Объект</legend>
+          <div class="frow"><label class="f">Тип<select id="d-obj"><option value="flat">Квартира</option><option value="room">Комната</option><option value="share">Доля</option><option value="hl">Дом с ЗУ</option><option value="land">Земля</option><option value="apt">Апартаменты</option><option value="park">Машиноместо</option><option value="comm">Нежилое / коммерция</option></select></label></div>
+          <label class="ck"><input type="checkbox" id="d-pledge"> Объект в залоге у другого банка</label>
+        </fieldset>
+        <fieldset><legend>Сделка</legend>
+          <div class="frow">
+            <label class="f">Цена объекта, ₽<input id="d-price" type="text" inputmode="numeric" value="6 000 000"></label>
+            <label class="f">ПВ, %<input id="d-pv" type="number" min="0" max="100" step="0.01" value="25"></label>
+            <label class="f">Срок, лет<input id="d-term" type="number" min="1" max="30" value="25"></label>
+          </div>
+          <label class="ck"><input type="checkbox" id="d-msk"> Маткапитал в ПВ</label>
+          <label class="ck"><input type="checkbox" id="d-und"> Нужно занижение / ПВ по расписке</label>
+          <label class="ck"><input type="checkbox" id="d-ins" checked> Клиент согласен на страхование жизни</label>
+        </fieldset>
+      </form>
+      <div class="dsum" id="d-sum"></div>
+      <div class="frow" style="align-items:end"><label class="f">Сортировать<select id="d-sort"><option value="rate">по ставке</option><option value="kv">по моему КВ</option></select></label></div>
+      <div class="pick-res" id="d-out"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Собрано из вашей таблицы «Банки», анкеты от 05.11.2026 и материалов банков (октябрь–ноябрь 2026). Перед сделкой сверяйте условия с менеджером банка.</p>
+    <p class="copyright">© Емельяненко Дарья Александровна, 2026. Объект авторского права и результат интеллектуальной деятельности (ст. 1225, 1259 ГК РФ). Копирование, распространение, переработка и иное использование без письменного согласия правообладателя запрещены (ст. 1229, 1270 ГК РФ).</p>
+  </footer>
+</div>
+
+<script>
+const CARDS = [{"id": "atb", "name": "Азиатско-Тихоокеанский банк (АТБ)", "date": "05.11.2026", "src": "таблица условий АТБ (ноябрь 2026), ваша анкета", "tiles": [["Мин. ставка", "16,99%", "квартиры, доли"], ["ПВ", "от 20,1%", "дом, коммерция — 30%"], ["Рефинанс", "17,2%", "К/З до 79,9%"], ["ЗП-дисконт", "−0,5%", "кроме льготных"]], "calc": {"progs": [["Квартира, апартаменты, доли, машиноместо", 16.99, 16.49], ["Коммерция", 18.99, 18.49], ["Рефинансирование квартиры", 17.2, 16.7]], "opts": [["d", "Зарплатный клиент", -0.5, "по всем программам, кроме семейной, ДВ и арктической", true, null], ["s", "Доход не подтверждён выпиской СФР", 0.5, "ПВ тоже выше", false, [0, 1]]], "note": "?:16,99% — это ставка до ЗП-дисконта или уже с ним?"}, "rates": [["Вторичка (готовое жильё)", "от 16,99%", ["Квартира, апартаменты, таунхаус, машиноместо, доли — 16,99%", "ПВ от 20,1%; таунхаус, машиноместо — от 30%", "Дом с ЗУ, коммерция — ПВ от 30%; коммерция 18,99%", "Кредит от 700 тыс., срок 3–30 лет", "Максимум для Красноярска — 50 млн (дом, коммерция — 35 млн)"]], ["Новостройки", "от 16,99%", ["Квартира, апартаменты, таунхаус, ИЖС, машиноместо — 16,99%, ПВ от 20,1%", "Коммерция 18,99%, ПВ от 30%", "Максимум для Красноярска — 20 млн"]], ["Рефинансирование", "от 17,2%", ["Квартира, апартаменты, таунхаус, машиноместо — 17,2%, К/З до 79,9%", "Коммерция, дом с ЗУ — 19,2%, К/З до 70%", "Максимум для Красноярска — 10 млн"]], ["Нецелевой под залог", "от 20,3%", ["Под квартиру/апартаменты — 20,3%, К/З до 70%, до 30 млн", "Под дом, машиноместо, таунхаус, коммерцию — 20,7%, К/З до 60%, до 5 млн", "От 500 тыс., срок 3–20 лет"]]], "progs": [["Дальневосточная и арктическая", "2%", ["Квартира, таунхаус — ПВ от 20,1%; дом с ЗУ — от 30%", "До 9 млн на строительство (63,2 м²), 6 млн — иные цели"]]], "objects": ["Квартиры", "Апартаменты", "Таунхаус", "Доли", "Машиноместа", "Дом с ЗУ", "ИЖС", "Коммерция"], "obj_special": [["Доли", "ПВ 0–20%", ["Покупка одной или нескольких долей"]], ["Дом с ЗУ", "ПВ 30%", ["Без выписки СФР — ПВ 40%, К/З рефинансирования до 60%"]]], "clients": ["Без выписки СФР: ставка +0,5%, ПВ выше"], "feat": ["Составление ДКП банком — 4 500 ₽"], "costs": ["Оценка ~5 000 ₽", "Страхование ~0,7–0,9% от кредита + 10%: имущество, жизнь, титул", "Аккредитив — 0 ₽", "ЭР 9 000 ₽; УКЭП 793 ₽; электронная закладная 5 000 ₽", "Госпошлина ~1 000–4 000 ₽; нотариус — по необходимости"], "kv": ["?:Размер вознаграждения не указан"], "nonm": ["w:Неипотечных сделок нет"], "ask": ["16,99% — с ЗП-дисконтом или без", "Вознаграждение агенту", "Занижение"], "contact": ["w:Полина, +7 913 056-50-56"]}, {"id": "accept", "name": "Банк «Акцепт»", "date": "06.11.2026", "src": "листовка по семейной, сообщение менеджера (ноябрь 2026), ваша анкета", "tiles": [["Мин. ставка", "12%", "с аккредитивом"], ["Базовая", "16,5%", "вторичка, первичка"], ["ПВ", "от 20,1%", "все программы"], ["Возраст", "от 18", ""], ["КВ", "1%", ""]], "calc": null, "calc_note": "12% на вторичку и первичку — «с аккредитивом»: что это значит (комиссия за аккредитив? размер?), на какой срок ставка", "rates": [["Вторичка", "от 12%", ["16,5%, ПВ от 20,1%", "12% — с аккредитивом (условия уточнить)"]], ["Новостройки", "от 12%", ["16,5%, ПВ от 20,1%", "12% — с аккредитивом (условия уточнить)"]], ["Иные кредиты", "от 9,3%", ["Потребкредит под залог недвижимости — от 15,3%", "Потребкредит от 9,3%, до 1,5 млн", "Кредитные карты до 1 млн"]]], "progs": [["Семейная (работу возобновили)", "от 2%", ["TABLE:Детей|Ставка|Лимит;1|10%|6 млн;2|8%|8 млн;3|6%|10 млн;4|4%|10 млн;5+|2%|10 млн", "ПВ от 20,1%", "6% — при ПВ более 50% или ребёнке-инвалиде", "Снижается до 6%, если в первый год долг снизится до 50% стоимости жилья", "Объект: квартира, жилой дом от застройщика", "w:Срок 15 лет, если застройщик не субсидирует"]], ["IT-ипотека", "5,7%", ["ПВ от 20,1%"]], ["Коммерция", "16,5%", ["ПВ от 20,1%"]], ["Автопарковка", "16,5%", ["ПВ от 20,1%"]]], "objects": ["Квартиры", "Комнаты", "Секции", "Дом от застройщика (семейная)", "Машиноместа", "Коммерция"], "obj_special": [["Комнаты, секции", "", ["Кредитуют", "?:Нужны ли отказы соседей или письма"]]], "clients": ["Возраст от 18 лет", "Стаж от 3 мес. на текущем месте", "ИП, самозанятые, собственники бизнеса — кредитуют", "Принимают справку по форме банка"], "feat": ["Маткапитал как ПВ", "Квартиры в залоге — берут", "Отлагательные условия", "Индивидуальный подход"], "kv": ["1%"], "nonm": ["w:Неипотечных сделок нет"], "ask": ["12% «с аккредитивом» — условия и срок", "Максимальный возраст на конец срока", "Дисконты и надбавки", "Расходы: оценка, страхование, ЭР", "КВ 1% — по всем программам, включая семейную?"], "contact": ["Сличная Оксана Сергеевна, менеджер продаж, +7 923 288-75-24, slichnaia_os@akcept.ru", "w:Ранее: Оксана, +7 950 427-66-43"]}, {"id": "alfa", "name": "Альфа-Банк", "date": "03.11.2026", "src": "презентация «Ипотечная академия. Тренды 2026», ваша таблица", "tiles": [["Мин. ставка", "16,99%", "ПВ 50%, от 10 млн"], ["Базовая", "17,99%", "без дисконтов"], ["ПВ", "от 20,1%", "дом с ЗУ — тоже"], ["Возраст", "21–75", "w"], ["КВ", "до 1,1%", "при отказе от дисконта"]], "calc": {"progs": [["Готовое и строящееся жильё (ПВ от 50%, кредит от 10 млн)", 17.99, 16.99]], "opts": [["d", "ЗП-клиент", -0.4, "не суммируется с Exclusive/Ключевой", true, null], ["d", "Партнёр Exclusive / Ключевой", -0.3, "вместо ЗП-дисконта", false, null], ["d", "Alfa Only", -0.2, "", true, null], ["d", "Быстрый выход на сделку", -0.4, "по базовым программам; действовал до 31.10.2026", true, null]], "note": "Alfa Only без условия по сумме: 18,49% при ПВ 20,1–49,9%, 18,09% при ПВ от 50,1%. Дом с ЗУ — дисконты не применяются."}, "rates": [["Вторичка (готовое жильё)", "от 16,99%", ["Базовая 17,99%, ПВ от 20,1%", "16,99% — при ПВ от 50% и кредите от 10 млн с дисконтами", "Срок 3–30 лет, до 35 млн в регионах", "w:В вашей таблице: от 16,99%"]], ["Новостройки", "от 16,99%", ["Условия как на готовое жильё"]], ["Рефинансирование", "от 18,99%", ["До 79,9% стоимости, до 35 млн, срок 3–30 лет", "Квартиры и апартаменты", "Нет требований к сроку и числу рефинансирований", "TOP UP: сумма больше остатка без роста ставки, (остаток + TOP UP) ≤ 79,9%"]]], "progs": [["Семейная", "от 2%", ["1 ребёнок 10% / 6 млн; 2 — 8% / 8 млн; 3 — 6% / 10 млн; 4 — 4%; 5+ — 2%", "6%: ПВ от 50%, погашение до 50% в первый год, ребёнок-инвалид", "Ребёнок до 7 лет или ребёнок-инвалид до 18; ПВ от 20,1%", "Прописка с ребёнком не нужна; срок до 30 лет по субсидии", "Субсидия застройщика действует только на период 6%; при рождении ребёнка ставка снижается по стандарту, дисконт субсидии не сохраняется", "w:КВ по семейной 0,3%"]], ["Дом с ЗУ", "от 19,5%", ["21,5% (ПВ от 20,1%) · 20,5% (от 30,1%) · 19,5% (от 50,1%)", "Дисконты не применяются", "600 тыс. – 35 млн, до 30 лет"]], ["Ипотека Лайт", "", ["Справку о доходах можно дать после одобрения"]]], "objects": ["Квартиры", "Апартаменты", "Коммерция", "Машиноместа", "Таунхаус", "Дом с ЗУ", "Доли детям"], "obj_special": [["Дом с ЗУ", "ПВ < 50,1%: до 15 млн", ["Дом не ранее 2005 г.", "Дом до 2021 г. — только с отделкой", "Площадь не более 250 м²"]]], "clients": ["w:Возраст 21–75; если на сделке 50, то до 70 (уточнить формулировку)", "w:Доход: 2-НДФЛ, СЗИ, справка по форме банка", "ПНД/НД справки не нужны"], "feat": ["Готовое жильё за 1 день: клиент — 5 мин, залог — 1 час", "Экспресс-одобрение залога без документов и оценки", "Дистанционные сделки с ЭР", "Маткапитал: выписка об остатке не нужна", "Несовершеннолетний продавец — решение опеки не контролируют", "Домовая книга — только при приватизации", "Сделки по доверенности, межрегиональные, альтернативные"], "costs": ["?:Расходы не указаны"], "kv": ["Готовое, строящееся, рефинансирование: до 1,1% при отказе от дисконта / 0,8%", "Дом и таунхаус — до 0,4%", "Выплата на следующий день", "w:Вторичка 0,8–1,1%, семейная 0,3%"], "nonm": ["«Безопасные расчёты» — 0 ₽: аккредитивы, менеджер, переговорная", "«Лайт» 8 900 ₽: + электронная регистрация", "«Классик» 13 900 ₽: + задаток, договор, ЭР", "Выкуп из-под залога Альфы — 30 000 ₽, «под ключ» — 40 000 ₽ (регионы)", "Покупатель — только физлицо; продавец — ФЛ, ИП, ЮЛ", "«Гарантия сделки» (титул): 2 500 ₽ за 1 год, 5 000 ₽ за 3 года на каждый млн"], "ask": ["Дисконт за быстрый выход — продлён после 31.10.2026?", "ЗП-дисконт: у вас −0,1%, в презентации −0,4%", "Вознаграждение по неипотечным", "Возраст: «если на сделке 50, то до 70»"], "contact": ["w:Таня, 8 923 296-21-47"]}, {"id": "vtb", "name": "ВТБ", "date": "03.11.2026", "src": "материалы ВТБ (октябрь 2026), ваша таблица", "tiles": [["Базовая", "18%", "вторичка, новостройки"], ["Мин. ставка", "15,6%", "если дисконты суммируются"], ["Застройщики", "от 13,9%", "каталог акций"], ["Возраст", "18–75", "w"]], "calc": {"progs": [["Вторичка / новостройки", 18.0, 15.6], ["Рефинансирование", 18.6, 16.2], ["Готовый дом", 18.4, 16.0], ["Земельный участок", 18.8, 16.4], ["ИЖС", 19.4, 17.0], ["Машиноместа, кладовки", 19.5, 17.1], ["Коммерция", 20.5, 18.1]], "opts": [["d", "ЗП-клиент или будущий ЗП-клиент", -0.4, "", true, null], ["d", "Кредит от 6 млн", -0.5, "Красноярский край", true, null], ["d", "ПВ от 50,1%", -0.5, "", true, null], ["d", "Комплексное страхование", -1.0, "", true, null]], "note": "?:Суммируются ли все дисконты — уточнить. В вашей таблице: «от 18% (ПВ 50%, от 6 млн)»."}, "rates": [["Вторичка", "от 18%", ["Минимальная 18% (без дисконтов)", "w:Ваша таблица: от 18% при ПВ 50% и кредите от 6 млн"]], ["Новостройки", "от 13,9%", ["18% базовая", "От 13,9% у отдельных застройщиков (каталог акций, ноябрь 2026)"]], ["Рефинансирование", "18,6%", ["w:Ваша таблица: от 18,6%"]], ["Иные кредиты", "от 18,4%", ["Готовый дом 18,4% · ИЖС 19,4% · ЗУ 18,8%", "Коммерция 20,5% · машиноместа и кладовки 19,5%"]]], "progs": [["Семейная", "от 6%", ["До 30 лет без обязательного субсидирования; лимит по числу детей", "6%: ПВ от 50,1%, ребёнок-инвалид, стройка или готовый дом", "Ставка снижается сама: долг ≤ 50% цены в первый год, рождение ребёнка, инвалидность", "Через 15 лет: меньшее из (ставка + 4%) или (КС + 3/3,5%)", "Кейсы: ребёнок 19 лет как созаёмщик — право использует; дети 8 и 11 лет — не подходят; 2 детей, один инвалид — 6%, 8 млн", "Разведённые родители: у взявшего позже — штрафная ставка"]], ["Комнаты и доли (с 12.10.2026)", "как квартира", ["Кредит 500 тыс. – 50 млн", "Одобрение только экспертом по титулу; оценка обязательна", "Страхование всего объекта; выдача после регистрации ипотеки", "Объекты в залоге у ВТБ или другого банка — нельзя"]]], "objects": ["Квартиры", "Апартаменты", "Комнаты", "Доли до целого", "Дом с ЗУ", "ИЖС", "Земля", "Коммерция", "Машиноместа", "Кладовки"], "obj_special": [["Комната", "", ["Свой кадастровый номер; можно без привязки к квартире", "Одна комната на один кредит; нужен техпаспорт", "Онлайн-сделки нельзя; маткапитал можно", "Иностранцам нельзя"]], ["Доля до целого", "", ["У заёмщика/созаёмщика уже есть доля, докупает остальные", "В залог — весь объект; ДКП нотариальный", "ПВ не нужен, если имеющаяся доля дороже ПВ", "Маткапитал нельзя; онлайн можно; иностранцам можно"]]], "clients": ["w:Возраст 18–75", "w:Доход: справка, СЗИ, 2-НДФЛ"], "costs": ["Страховой бандл «Защити жильё + Дело случая» — пример 14 900 + 5 100 ₽"], "under": ["w:До 70% от кадастровой стоимости"], "kv": ["w:По ипотеке — нет", "Страховой бандл: 60% от суммы на следующий день (20 000 ₽ → 12 000 ₽)"], "nonm": ["ЭР + СБР = 690 ₽ с промокодом М2РЕГИОН, до 31.12.2026", "Не для: покупателя-юрлица, залога ВТБ, альтернативных сделок"], "ask": ["18% — базовая или уже с дисконтами", "Суммируются ли дисконты", "Вознаграждение за СБР"], "contact": ["w:Валерия, 8 923 278-97-28"]}, {"id": "gpb", "name": "Газпромбанк", "date": "", "src": "", "ask": ["Все условия — данных нет"]}, {"id": "domrf", "name": "Банк ДОМ.РФ", "date": "05.11.2026", "src": "презентация октябрь 2026, «Ипотечные программы», ваша таблица", "tiles": [["Мин. ставка", "17,1%", "готовое и новостройки"], ["Базовая", "17,8%", "без дисконтов"], ["ПВ", "20,01%", "все программы"], ["Возраст", "21–75", "75 — на дату погашения"], ["КВ", "0,6%", "w"]], "calc": {"progs": [["Готовое жильё / новостройка", 17.8, 17.1], ["ИЖС", 18.5, 17.8], ["Коммерческая недвижимость", 19.3, 19.1]], "opts": [["d", "Лояльность", -0.2, "зарплатный или будущий ЗП-клиент, сотрудник развития", true, null], ["d", "Большие суммы", -0.5, "кредит от 8 млн (регионы)", true, [0, 1]], ["s", "ПВ от 20,01% до 50%", 1.0, "", false, [0, 1]], ["s", "Без личного страхования", 1.0, "", false, null], ["s", "Доход не подтверждён", 0.5, "", false, null], ["s", "Загородная недвижимость", 0.9, "дом зарегистрирован > 24 мес. назад или продавец не первый собственник", false, [0]], ["s", "Опция «машиноместо»", 2.0, "", false, [0]]], "note": ""}, "rates": [["Вторичка (готовое жильё)", "от 17,1%", ["Базовая 17,8%, ПВ от 20,01%", "До 30 млн в регионах, срок до 30 лет", "Страхование титула не нужно"]], ["Новостройки", "от 17,1%", ["Базовая 17,8%, те же дисконты", "Спецставка за счёт эскроу у застройщиков банка", "С субсидией застройщика — рыночные от 12,5%"]], ["Иные кредиты", "от 12%", ["ИЖС 18,5% → минимум 17,8%", "Коммерция 19,3% → минимум 19,1%", "Кредит наличными от 12%, 100 тыс. – 10 млн"]]], "progs": [["Семейная", "от 2%", ["TABLE:Детей|Ставка|Лимит|С субсидией;1|10%|6 млн|7,1%;2|8%|8 млн|5,1%;3|6%|10 млн|3,5%;4|4%|10 млн|1,1%;5+|2%|10 млн|0,1%", "Ребёнок до 7 лет или ребёнок-инвалид до 18", "6% всегда: ребёнок-инвалид, дом/ИЖС, ПВ больше 50%", "Льгота 15 лет, потом — меньшее из (ставка + 4%) или (КС + 3%; ИЖС — КС + 3,5%)", "Без личного страхования +1%"]], ["IT-ипотека", "6%", ["До 9 млн", "С субсидией застройщика — от 4,2%"]], ["Дальневосточная и арктическая", "2%", ["До 6 млн; 9 млн — при площади от 60 м²", "Без личного страхования +1%"]], ["ИЖС и готовый дом", "от 17,8%", ["Покупка ЗУ и стройка, стройка на своём ЗУ, готовый дом с ЗУ", "Подряд с эскроу по 186-ФЗ"]]], "objects": ["Квартиры", "Апартаменты", "Дом с ЗУ", "Дом блокированной застройки", "Машиноместа", "Коммерция", "ИЖС"], "obj_special": [["Загородный дом с ЗУ", "+0,9%", ["Если дом зарегистрирован больше 24 мес. назад или продавец не первый собственник"]], ["Машиноместо", "+2%", ["Опция к основному кредиту"]], ["Коммерция", "от 19,1%", ["Из дисконтов — только лояльность"]]], "clients": ["Гражданство РФ", "Возраст 21–75 (75 — на дату погашения)", "Стаж на последнем месте от 3 мес.", "Доход — из Цифрового профиля, без документов", "Не хватает дохода — справка по форме банка"], "feat": ["Подача по QR-коду, онлайн-сделки, Госключ", "Удалённая идентификация, мобильный банкир", "w:Идентификация покупателя — до сделки", "w:Счёт открывается на сделке: наличные или СБП"], "costs": ["Аккредитив — бесплатно (в вашей таблице — 2 000 ₽)", "w:Оценка 3 000–5 000 ₽", "Электронная регистрация — бесплатно", "w:Страхование: жизнь и объект; «коробки» — можно отказаться", "Титул не нужен"], "under": ["w:До суммы кредита, остаток — по аккредитиву"], "kv": ["w:Ипотека — 0,6% через платформу", "Неипотечный аккредитив: 1 000–3 000 ₽ (до 19 клиентов в месяц), до 11 000 ₽ (от 20)"], "nonm": ["Аккредитив от 1 млн — бесплатно", "Онлайн-запись на domrfbank.ru/non-mortgage, за 24 часа", "ЭР и Госключ бесплатно; регистрация 1–3 дня, исполнение до 1 дня", "Объекты: квартира, апартаменты, дом, ЗУ, кладовки, машиноместа, нежилые", "Нельзя: залоговые объекты, нерезиденты, альтернативные"], "ask": ["Есть ли рефинансирование", "Аккредитив по ипотеке: бесплатно или 2 000 ₽", "КВ 0,6% — актуально ли"], "contact": ["w:Далер, 8 914 941-60-80", "Кабинет партнёра: partner.domrfbank.ru", "Заявки: ipoteka_doc@domrf.ru"]}, {"id": "levo", "name": "Банк «Левобережный»", "date": "11.11.2026", "src": "разговор с банком 10.11.2026, матрица ставок, паспорт «Универсальный», листовки", "tiles": [["Мин. ставка", "15%", "выкуп ставки: комиссия 6% от кредита"], ["Базовая", "18%", "ЗП-клиент — 17%"], ["ПВ", "от 20,01%", "комната, доля — 30,01%"], ["Возраст", "21–80", ""], ["Срок кредита", "до 25 лет", "все программы"]], "calc": {"progs": [["Квартира, дом с ЗУ, апартаменты (готовое / строящееся), рефинансирование", 18.0, null], ["Комната, последняя доля, нежилое, машиноместо", 20.0, null], ["Кредит под залог", 18.0, null]], "opts": [["f", "Выкуп ставки", 15.0, "комиссия 6% от суммы кредита; только при официальном доходе", false, [0, 1]], ["d", "ЗП-клиент", -1.0, "", true, null], ["s", "Без страхования жизни", 1.0, "", false, null], ["s", "Доход справкой по форме банка (+ трудовая книжка)", 2.0, "", false, null], ["s", "Кредит на любые цели", 1.0, "", false, [2]], ["s", "Залог комнаты/доли, нежилого", 2.0, "", false, [2]]], "note": "w:При выкупе ставка 15% — надбавки не применяются. Выкуп возможен только для клиентов с официальным доходом."}, "rates": [["Вторичка", "от 15%", ["Квартира, дом с ЗУ, апартаменты — 18% (ЗП — 17%)", "Комната, последняя доля, нежилое, машиноместо — 20%", "w:Выкуп ставки до 15% — комиссия 6% от суммы кредита; только при официальном доходе", "ПВ от 20,01%; кредит 0,3–20 млн", "Земельный участок («Своя земля») — 24,5%", "w:Срок до 25 лет"]], ["Новостройки", "от 15%", ["w:Те же условия, что по готовому жилью:", "Квартира, дом с ЗУ, апартаменты — 18% (ЗП — 17%)", "w:Выкуп ставки до 15% — комиссия 6% от суммы кредита; только при официальном доходе", "ПВ от 20,01%; кредит 0,3–20 млн", "w:Срок до 25 лет"]], ["Рефинансирование", "18%", ["Можно с дополнительной суммой"]], ["Иные кредиты", "от 18%", ["Под залог жилой/нежилой — 18%, кредит до 70% стоимости залога", "На любые цели +1%, выдача наличными"]]], "progs": [["Семейная", "от 2%", ["1 ребёнок 10% / 6 млн; 2 — 8% / 8 млн; 3 — 6% / 10 млн; 4 — 4%; 5+ — 2%", "Готовое, строящееся, ИЖС; ПВ 20,01%", "w:Срок до 25 лет: платёж считается как под 6% на 25 лет; через 15 лет на остаток — повышенная ставка", "Без страхования жизни +1%"]], ["Комбо-семейная", "", ["w:Подписываются два договора: льготный (семейная) и рыночный (свыше лимита, от 17%)", "w:Рыночный договор нельзя закрыть досрочно отдельно", "w:Гашение идёт пропорционально долям обоих кредитов", "До 15 млн, ПВ 20,01%"]], ["«Своя земля»", "24,5%", ["w:На земельный участок, в том числе с небольшим строением («избушкой»)", "До 10 млн, ПВ 0%, срок 1–15 лет", "Кредит может быть больше цены участка — до двух его стоимостей", "Если кредит больше 80% цены участка, ставка выше: +1% (кредит 81–100% цены), +2,5% (101–200%)"]], ["Рефинансирование, под залог, ИЖС, Универсальный", "", []], ["Чего нет", "", ["w:IT, дальневосточной, арктической, новых территорий, крымской, военной — нет", "w:Сельская — на паузе"]]], "objects": ["Квартиры", "Апартаменты", "Дом с ЗУ", "ИЖС", "Земля", "Комнаты", "Доли до целого", "Машиноместа", "Нежилое"], "obj_special": [["Квартира", "", ["w:Не ниже 2-го этажа", "w:Износ дома не более 60%", "w:Согласовывают хорошо"]], ["Дом с ЗУ", "", ["w:Сильных ограничений нет, согласовывают хорошо"]], ["Доля", "ставка 20%", ["w:Только выкуп до целого", "ПВ 30,01%; при доходе справкой банка — 50,01% (паспорт продукта, матрица)"]], ["Комната", "ставка 20%", ["w:Отказы или уведомления соседей — индивидуально", "ПВ по материалам банка — 30,01% (справкой банка — 50,01%)", "?:В разговоре звучало 20,01%, как по квартирам"]], ["Нежилое, машиноместо", "20%", []], ["Земля («Своя земля»)", "24,5%", ["w:Участок, в т.ч. с небольшим строением", "Подробнее — в «Программах»"]]], "clients": ["w:Возраст 21–80 лет", "w:Найм: стаж на последнем месте от 3 мес., общий — от 1 года", "w:ИП на УСН и на патенте — регистрация от 1 года", "w:Самозанятые — от 6 мес.", "Собственники бизнеса — да", "w:Супруг — созаёмщик (с доходом или без) либо нотариальное согласие супруга (приём возобновили)", "Доход: выписка по ЗП в банке / СФР, 2-НДФЛ, декларация, патент / справка по форме банка (+2%)", "w:Справка по форме банка — только вместе с трудовой книжкой"], "feat": ["w:Комбо — два договора (рыночный нельзя погасить отдельно)", "Маткапитал и субсидии в ПВ — свои средства сверх ПВ 20,01% не нужны", "ПВ распиской", "Объекты в обременении любых банков", "Доли детям (с решением опеки)", "Объекты с перепланировкой, которую можно узаконить", "Продавец владеет не менее 12 мес.", "w:Выкуп ставки до 15% за 6% от суммы кредита"], "costs": ["w:Выкуп ставки — 6% от суммы кредита", "w:Аккредитив: семейная — 10 000 ₽; рыночные — 15 000 ₽; при выкупе ставки — бесплатно", "w:Оценка — около 5 000 ₽", "w:ЭР: квартира, комната 8 000 ₽; дом с ЗУ 10 000 ₽ (+ госпошлина)", "w:Страхование ≈ 1%: имущество, жизнь, титул", "w:Нотариальное согласие супруга — если супруг не идёт созаёмщиком"], "under": ["w:Занижение — до суммы кредита + 20%", "ПВ можно подтвердить распиской"], "kv": ["w:По ипотеке — нет", "w:Безопасные расчёты — 3 000 ₽ за сделку"], "nonm": ["Счёт эскроу, срок 6 месяцев, только физлица", "w:Бесплатно в любом случае, в т.ч. до 2 млн", "Заявка — в кабинете партнёра bliz.nskbl.ru, вкладка «Безопасные расчёты»; документы: паспорта, СНИЛС, ИНН, ДКП", "w:Счёт покупателю — в день сделки; пополнение наличными или по СБП со своего счёта (тот же номер телефона)", "w:С ЭР банка — раскрытие автоматически; без ЭР — документы на почту банка", "w:Деньги продавцу — обычно в течение суток, закладывать 1–5 дней", "w:ЭР: квартира, комната 8 000 ₽; дом 10 000 ₽ (+ госпошлина); можно выездного регистратора", "w:ДКП свой, но с порядком расчётов банка", "w:КВ 3 000 ₽ за сделку, независимо от суммы и срока; нужна регистрация в кабинете партнёра"], "ask": ["ПВ по комнатам: по материалам 30,01%, в разговоре — 20,01%"], "contact": ["Светлана Почекутова, +7 923 273-64-88, krpsv@nskbl.ru"], "answers": {"rate": ["Без выкупа: 18%, ЗП-клиент — 17%", "Выкуп ставки — 15%, комиссия 6% от кредита; только при официальном доходе", "При выкупе надбавки не действуют", "Максимальный срок по всем программам — 25 лет"], "rates": ["Вторичка: база 18%, ЗП 17%, выкуп до 15% за 6%", "Новостройка — как готовое (без комнат и долей)", "Рефинансирование — можно с дополнительной суммой", "«Своя земля» — на ЗУ, в т.ч. с небольшим строением"], "progs": ["Семейная до 25 лет, платёж как под 6%; через 15 лет — повышенная ставка на остаток", "Комбо — 2 договора, рыночный нельзя закрыть отдельно, гашение пропорционально", "Нет: IT, ДВ, арктической, новых территорий, крымской, военной; сельская на паузе", "ПВ 20,01%; маткапитал в ПВ — да, свои сверх ПВ не нужны"], "objects": ["Квартиры и дома согласовывают хорошо", "Квартира: от 2 этажей, износ до 60%", "Доли: только до целого, ПВ 20% от стоимости доли", "Комнаты: отказы/уведомления — индивидуально", "Комнаты и доли — ПВ от 20,01%, как по квартирам"], "clients": ["Возраст 21–80", "Стаж от 3 мес., общий от 1 года", "ИП (УСН, патент) от 1 года; самозанятые от 6 мес.", "Супруг — созаёмщик (с доходом или без) или нотариальное согласие (приём возобновили)", "Справка по форме банка — только с трудовой книжкой"], "feat": ["Выкуп ставки, комбо, семейная на 25 лет"], "costs": ["Выкуп ставки 6%", "Аккредитив: семейная 10 000 ₽, рыночные 15 000 ₽, при выкупе — 0 ₽", "Оценка 5 000 ₽", "ЭР 8 000 ₽ (кв., комн.) / 10 000 ₽ (дом + ЗУ) + пошлина", "Страхование ≈ 1% (имущество, жизнь, титул)", "Нотариальное согласие супруга — если супруг не созаёмщик"], "nonm": ["Эскроу бесплатно в любом случае", "Счёт покупателю — в день сделки; наличные или СБП (тот же телефон)", "С ЭР банка — раскрытие автоматически, без — документы на почту", "1–5 дней (обычно сутки)", "ЭР 8 000 / 10 000 ₽ + пошлина; можно выездного регистратора", "ДКП свой, с порядком расчётов банка", "КВ 3 000 ₽ за сделку, регистрация в кабинете партнёра"], "under": ["До суммы кредита + 20%"], "kv": ["По ипотеке вознаграждения нет"]}}, {"id": "metall", "name": "Металлинвестбанк", "date": "11.11.2026", "tiles": [["Мин. ставка", "17,5%", "со всеми дисконтами"], ["ПВ", "от 20,01%", "коммерция, паркинг — 30,01%"], ["Возраст", "18–70", ""], ["Семейная", "до 15 лет", "без страхования +0,5%"], ["Макс. срок", "23 года", ""]], "calc": {"fromMin": true, "progs": [["Первичка / вторичка", 18.0, 17.5], ["Залоговая недвижимость", 18.0, 17.5], ["Коммерция, ПВ 20,01%", 19.39, 18.89], ["Коммерция, ПВ 30,01%", 19.09, 18.59], ["Машиноместо / паркинг", 18.5, 18.3], ["Рефинансирование", 18.0, 17.5]], "opts": [["d", "Быстрый выход на сделку", -0.1, "в течение 30 дней с одобрения", true, null], ["d", "Персональная скидка (скидка менеджеру)", -0.2, "стоит 3 800 ₽", true, null], ["d", "Электронная регистрация", -0.2, "если объект в залоге — у Металлинвеста или другого банка", true, null], ["s", "Созаёмщик — третье лицо (кроме гражданского супруга)", 0.3, "", false, null], ["s", "Общий стаж от 6 мес. до 1 года", 0.3, "", false, null], ["s", "ИП или бизнес от 1 до 2 лет", 0.5, "", false, null], ["s", "Рефинансирование до регистрации залога", 1.5, "снимается после регистрации", false, [5]]], "note": "w:Базовой ставки у банка нет: минимальная 17,5% — со всеми дисконтами. Без дисконта ставка выше на его размер."}, "rates": [["Первичка и вторичка", "от 17,5%", ["w:17,5% — минимум со всеми дисконтами", "ПВ от 20,01%"]], ["Залоговая недвижимость", "от 17,5%", ["17,5% / 18% (с дисконтами / без)", "ПВ от 20,01%"]], ["Рефинансирование", "от 17,5%", ["До 80% от стоимости объекта", "w:Нужно не менее 6 платежей с основным долгом — иначе не рефинансируют", "w:До регистрации залога в пользу банка +1,5%, после — снимается", "w:Можно с доп. суммой — до 1 млн"]], ["Иные кредиты", "от 18,1%", ["Кредит под залог квартиры — 19,9%, до 60% стоимости, до 15 млн (со скидками за ЭР и электронную закладную)", "Потребкредит и его рефинансирование — от 18,1%"]]], "progs": [["Семейная", "2–10%", ["По числу детей; ПВ от 20,01%", "w:Срок до 15 лет", "Без страхования +0,5%"]], ["IT-ипотека", "5,99%", ["ПВ от 20,01%"]], ["Коммерческая недвижимость", "от 18,59%", ["ПВ 20,01% — 18,89% / 19,39%", "ПВ 30,01% — 18,59% / 19,09%"]], ["Машиноместа / паркинг", "от 18,3%", ["ПВ 30,01%; 18,3% — с электронной регистрацией"]], ["Комбо — IT", "нет", ["w:Комбо-программ сейчас нет"]]], "objects": ["Квартиры", "Апартаменты", "Коммерция", "Паркинги", "Кладовки"], "obj_special": [["Не кредитуют", "", ["w:Дома, земельные участки, доли", "w:Гостинки — квартиры по документам, а по факту комнаты"]]], "clients": ["Возраст 18–70", "Стаж на последнем месте — 3 мес.", "w:Общий стаж 6–12 мес. — +0,3%", "w:ИП (патент, УСН) — от 2 лет; от 1 года — +0,5%; КУДИР обязательна", "w:Собственники бизнеса — без анализа бизнеса; от 2 лет, от 1 года — +0,5%", "Самозанятые — от 1 года", "w:Справка по форме банка — если есть минимальные отчисления или электронная трудовая; справку передают в банк на сделке", "w:Созаёмщик — третье лицо: +0,3% (гражданский супруг третьим лицом не считается)"], "feat": ["Без скоринга и моратория", "w:Маткапитал в ПВ — да (кроме мамы по нотариальному согласию)", "Рассмотрение заявки от 3 часов, объекта — день в день"], "docs": ["**Найм: анкета, согласия; паспорт; СНИЛС; военный билет (мужчины до 30); трудовая / СТД-Р; 2-НДФЛ, справка банка или выписка по ЗП-карте; выписка СФР; свидетельства о рождении детей; сертификат и остаток МСК; СНИЛС и регистрация ребёнка (семейная)", "**ИП на УСН: декларация за 12 мес.; КУДИР (кроме коммерции); выписка по счёту за 12 мес. (PDF и Excel); характеристика деятельности", "**ИП на патенте: патенты 2025–2026 и оплата; КУДИР; выписка по счёту за 12 мес.; характеристика деятельности", "**Собственники ООО (директор): трудовая; 2-НДФЛ / выписка СФР / справка банка", "**Самозанятые: справка о доходах НПД за 12 мес.; справка о постановке на учёт", "**Нотариусы: трудовая или договор; справка о доходах / 3-НДФЛ; выписка из реестра нотариусов", "**Адвокаты: удостоверение; справка о доходах / 3-НДФЛ"], "costs": ["w:Аккредитив — 3 500 ₽", "w:Персональная скидка (скидка менеджеру) — 3 800 ₽ (ставка −0,2%)", "w:Электронная регистрация — 9 000 ₽ + госпошлина", "w:Оценка — «Профессионал», 4 500 ₽", "w:Страхование: жизнь и имущество; в среднем 1–1,5% по матрице", "w:Титул — если продавец единственный и старше 60 лет или владеет меньше 3 лет", "w:Созаёмщики страхуются пропорционально доходу (например, 60/40)", "w:Согласие супруга — принимают"], "under": ["w:Занижение есть — расчёт через счета, не по расписке", "?:До какой суммы — уточнить"], "kv": ["w:0,1% — стандартная вторичка, новостройка, рефинансирование, семейная, IT, коммерция; максимум 15 000 ₽", "w:0,4% — кредит под залог недвижимости по акции «Новые возможности плюс»", "w:Выплата через Метр Клаб"], "ask": ["Занижение — до какой суммы"], "contact": ["w:Елена Скрябина, 8 913 560-23-63"], "answers": {"rate": ["Базовой ставки нет; минимум 17,5% — со всеми дисконтами", "Персональная скидка (скидка менеджеру) −0,2, 3 800 ₽; быстрый выход −0,1; ЭР −0,2 — если объект в залоге (Металлинвеста или другого банка)", "Созаёмщик — третье лицо +0,3 (гражданский супруг — не третье лицо)", "Максимальный срок — 23 года"], "rates": ["Первичка/вторичка — от 17,5%", "Рефинансирование от 17,5%: только после 6 платежей с основным долгом; до регистрации залога +1,5%", "Рефинансирование с доп. суммой — до 1 млн"], "progs": ["Семейная — до 15 лет", "Комбо сейчас нет", "ПВ от 20,01%, маткапитал в ПВ — да"], "objects": ["Да: квартиры, апартаменты, коммерция, паркинги, кладовки", "Нет: дома, земля, доли, гостинки (квартиры-комнаты)"], "clients": ["Справка банка — при минимальных отчислениях или электронной трудовой", "ИП (патент, УСН) — КУДИР обязательна", "Общий стаж 6–12 мес. +0,3; ИП 1–2 года +0,5", "Справку по форме банка передают в банк на сделке"], "costs": ["Аккредитив 3 500 ₽", "Скидка менеджеру 3 800 ₽ (−0,2%)", "ЭР 9 000 ₽ + пошлина", "Оценка «Профессионал» 4 500 ₽", "Страхование жизнь + имущество, 1–1,5%; титул — продавец 60+ единственный или владение < 3 лет", "Созаёмщики страхуются пропорционально доходу", "Согласие супруга — принимают"], "under": ["Занижение есть, сумма — уточнить", "Расчёт через счета, не по расписке"], "kv": ["0,1% — вторичка, новостройка, рефинансирование, семейная, IT, коммерция; максимум 15 000 ₽", "0,4% — кредит под залог по акции «Новые возможности плюс»", "Выплата через Метр Клаб"]}, "alert": "Доход справкой по форме банка — справку обязательно передают в банк на сделке"}, {"id": "mkb", "name": "Московский Кредитный Банк (МКБ)", "date": "01.10.2026", "src": "презентация МКБ от 01.10.2026", "tiles": [["Базовая", "17,9%", "квартиры, апартаменты"], ["ПВ", "от 20,01%", "маткап — 10,01% свои"], ["Возраст", "18–75", ""], ["Макс. кредит", "200 млн", ""], ["КВ", "0,9 / 0,6%", "ИП-ЮЛ / физлица"]], "calc": {"progs": [["Квартиры, апартаменты, рефинансирование", 17.9, null], ["Коммерция, дом с ЗУ, под залог", 18.9, null], ["Машиноместо", 19.9, null]], "opts": [["d", "Без агентского вознаграждения", -0.3, "", false, null], ["d", "ЗП-проект", -0.5, "", false, null], ["d", "Роснефть, УГМК", -0.5, "", false, null], ["d", "Повторный кредит", -0.3, "ИК, АК, НК; кроме КК", false, null], ["d", "Крупный чек: 10–20 млн", -0.1, "20–30 млн −0,2; 30–40 млн −0,3; от 40 млн −0,4", false, null]], "note": "?:Минимальная ставка в презентации не указана — суммируются ли дисконты?"}, "rates": [["Вторичка", "от 17,9%", ["Квартиры, апартаменты 17,9%", "Коммерция, дом с ЗУ 18,9%", "Машиноместо 19,9%"]], ["Новостройки", "от 17,9%", ["Квартиры 17,9%, коммерция 18,9%, машиноместо 19,9%", "Опция «Сверхлимит»"]], ["Рефинансирование", "17,9%", ["С доп. суммой — 18,25%", "Без надбавки на период регистрации"]], ["Кредит под залог", "18,9%", ["Кредит/залог до 79,99%"]]], "progs": [["Семейная (с 01.10.2026)", "от 2%", ["Ребёнок до 7 лет или ребёнок-инвалид до 18", "1 ребёнок 10% / 6 млн; 2 — 8% / 8 млн; 3 — 6% / 10 млн; 4 — 4%; 5+ — 2%", "Дом с ЗУ — 6%; «Сверхлимит» до 15 млн; срок до 15 лет (второй договор — до 30)", "Прописка в объекте в течение 270 дней, подтверждать ежегодно 5 лет", "Ставка снижается при рождении ребёнка — по заявлению"]]], "objects": ["Квартиры", "Апартаменты", "Комнаты гостиничного типа", "Последняя доля", "Дом с ЗУ", "Коммерция", "Машиноместа"], "obj_special": [["Квартира", "", ["МКД не ранее 1950 г., износ до 60%", "Не под снос и не под расселение", "Перепланировки — индивидуально"]], ["Дом с ЗУ", "18,9%", ["Не ранее 2000 г., от 60 м², до 3 этажей", "Фундамент кирпич/камень/блок/бетон/сваи; деревянные — можно", "Круглогодичный доступ; ЗУ под ИЖС, на кадастре"]], ["Комната", "", ["Только гостиничного типа с отдельным санузлом", "?:Отказы соседей — не указано"]]], "clients": ["Гражданство РФ или Беларусь с ВНЖ; прописка не нужна", "Найм: стаж от 1–3 мес., общий не нужен", "Самозанятые от 6 мес.; ИП и бизнес от 1 года, ПВ 20%", "Созаёмщики — любые третьи лица", "Отлагательные условия: закрытие кредитов, ФССП"], "feat": ["Сделки из-под залога любого банка", "Дистанционные сделки; ДКП готовит банк", "По доверенности продавца, между родственниками", "Без закладной; электронная регистрация", "Пересмотр заявки после отказа"], "costs": ["Аккредитив 3 500 ₽; ДКП банка 5 000 ₽", "ЭР: 9 000 / 12 000 / 16 500 ₽ (1–3 объекта) + госпошлина", "ЭЦП 1 000 ₽ (Госключ — 0)", "Оценка — по тарифам (ocenka.mobi/mkb)", "Согласие супруга — рукописное", "Надбавки 10% к сумме за страхование нет"], "under": ["Стоимость в ДКП = сумма кредита", "Весь ПВ по расписке"], "kv": ["ИП и юрлица 0,9%, физлица 0,6%"], "ask": ["Группа регионов Красноярска (в группе 2 нет коммерции и машиномест, до 35 млн)", "Суммируются ли дисконты", "Комнаты коридорного типа и отказы соседей", "Неипотечные сделки"], "contact": ["Константин, +7 923 757-26-73", "Документы по залогу: yakimovkg@mkb.ru"]}, {"id": "pochta", "name": "Почта Банк", "date": "", "src": "", "ask": ["Все условия — данных нет"]}, {"id": "psb", "name": "Банк ПСБ", "date": "", "src": "ваша таблица", "tiles": [["Вторичка", "18,59%", "w"], ["Новостройки", "18,05%", "w"], ["Возраст", "21–70", "w"]], "calc": null, "calc_note": "Дисконты не указаны — уточнить.", "rates": [["Вторичка", "18,59%", []], ["Новостройки", "18,05%", []], ["Рефинансирование", "нет", ["w:Пока не рефинансируют"]]], "clients": ["w:Возраст 21–70", "w:ИП (УСН от 2 лет) и собственники бизнеса — ПВ от 40%", "?:Самозанятые: «нет» и «кредитуют» — противоречие", "w:Супруг с плохой КИ без дохода — можно"], "feat": ["w:Проверка права на семейную, если есть сомнения по второму родителю"], "costs": ["w:Аккредитив 3 500 ₽ — за каждого продавца", "w:ЭР 10 000 ₽ с госпошлиной", "w:Страхование (жизнь, имущество, титул) 0,5–1,5%", "w:Оценка 3 000–5 000 ₽ через сайт", "?:Согласие — «требуется согласие», запись оборвана"], "under": ["w:До суммы кредита"], "ask": ["Дисконты", "Самозанятые", "Вознаграждение, контакт"]}, {"id": "raif", "name": "Райффайзенбанк", "date": "05.11.2026", "src": "ваша анкета", "alert": "Ипотеку выдают только сотрудникам банка (на 05.11.2026)", "contact": ["w:Ирина, +7 913 758-37-73"]}, {"id": "rshb", "name": "Россельхозбанк", "date": "05.11.2026", "src": "ваша анкета", "alert": "Только семейная ипотека, срок 15 лет", "progs": [["Семейная", "", ["w:Срок 15 лет, условия общие"]]], "clients": ["w:Доход — документально, документы сдаются"], "nonm": ["w:Неипотечных сделок нет"], "contact": ["w:Евгения, +7 965 894-88-74"]}, {"id": "sber", "name": "Сбербанк", "date": "", "src": "ваша таблица, анкета", "progs": [["Семейная", "", ["w:Выдаёт на 15 лет, если застройщик не субсидирует"]]], "objects": ["Квартиры", "Комнаты", "Доли до целого", "Дом с ЗУ", "Земля", "Апартаменты", "Машиноместа", "Кладовки"], "kv": ["w:Нет"], "ask": ["Ставки и дисконты", "Клиенты, доходы, расходы"], "contact": ["w:Юлия, 8 902 923-80-08"]}, {"id": "sovk", "name": "Совкомбанк", "date": "03.11.2026", "src": "презентации ноябрь 2026", "tiles": [["Мин. ставка", "12,99%", "новостройка с субсидией"], ["Базовая", "17,49%", "новостройка"], ["ПВ", "от 15%", "госпрограммы 20,01%"], ["Возраст", "до 85", "базовые"], ["КВ", "0,8%", "спецпрограммы 1,5%"]], "calc": null, "calc_note": "Дисконты к ставке в материалах не указаны — уточнить. Ниже ставки: 12,99% только с субсидией застройщика.", "rates": [["Вторичка", "?", ["ПВ от 15%", "?:Ставка не указана"]], ["Новостройки", "от 12,99%", ["Квартиры, апартаменты 17,49%; коммерция 19,99%", "С субсидией 12,99% на 20 лет (определённые ЖК)", "«Новостройка» 12,49–12,99% до 30 лет"]], ["Сниженный платёж", "от 4,4%", ["Базовый: от 4,4% на льготный период, далее 18,49% или КС + 5%", "Выгодный: 12% на год → 14,49%; или 15,1% на год → 13,99%"]], ["Рефинансирование", "от 5,99%", ["Без отчёта об оценке", "Базовая → базовая: 12,99% (платная) / 16,99%", "Базовая → семейная: 5,99% (3 детей), 7,99% (2), 9,99% (1)", "Детская по Комбо из другого банка — от 8,32%", "?:Слайд от февраля 2026 — актуален ли"]], ["Иные кредиты", "", ["Потребкредиты, кредит под залог", "?:Ставка под залог не указана"]]], "progs": [["Семейная", "0,35–8,5%", ["Ставка фиксирована весь срок, 20–30 лет (с удорожанием у застройщиков)", "1 ребёнок 8–8,5%; 2 — 6–6,5%; 3 — 3,9–4,5%; 4 — 2,5%; 5+ — 0,35–1%", "Супруг — обязательно созаёмщик", "Долю можно дать третьему лицу, минимум 6 м²"]], ["Госпрограммы: IT, ДВИ", "", ["ПВ от 20,01%", "С донорством (заёмщик и созаёмщик), от 6 м²; вторичка в малых городах"]], ["Мегалимит", "", ["Схема — 2 договора"]], ["Средневзвешенная ставка", "", ["Один договор без субсидирования", "Детская ипотека 2018, IT; первичка"]], ["Готовые дома", "", ["ПВ 30%"]], ["Субсидирование вторички", "", []]], "objects": ["Квартиры", "Апартаменты", "Коммерция", "Готовые дома"], "obj_special": [["Готовый дом", "ПВ 30%", []]], "clients": ["Возраст до 85 лет по базовым", "Доход любым способом: справка банка, выписки", "По 2 документам — нет"], "feat": ["Объект в залоге другого банка", "ПВ можно внести после сделки", "Доли детям"], "costs": ["Страхование: жизнь 0,5% · имущество 0,12% · титул 0,15%", "Оценочный альбом 3 500 ₽", "Аккредитив, эскроу — бесплатно", "ЭР — в пакете 29 999 ₽ (карта МИР + ДМС), по желанию"], "kv": ["Первичка и вторичка — 0,8%", "Спецпрограммы вторички — 1,5%", "Под залог — 1%; госпрограммы, Мегалимит, дома — 0,5%", "Средневзвешенная, сниженный платёж — 0,8%", "Неипотечные — 0,15%", "Потребкредиты — до 12 000 ₽ по UTM-метке"], "nonm": ["Аккредитив (до 10 получателей, можно комиссию агенту) или эскроу", "Для клиента 0 ₽; тарифы 3 000 / 7 000 / 10 000 ₽", "Запись за 1 день, сканы документов", "Деньги продавцу — 3 рабочих дня; в другой банк бесплатно", "ЭР 7 000 ₽ или бесплатно по акции от 5 млн", "КВ 0,15%, от 2,5 млн, до 25 000 ₽"], "ask": ["Ставка по вторичке и под залог", "Дисконты", "Слайд по рефинансированию — актуален ли"], "contact": ["Анна Севостьянова, менеджер по партнёрам, +7 983 159-57-11", "Татьяна Крыгина, управляющий, +7 913 538-73-03", "Ещё 3 специалиста — Чечерина, Киреева, Антонова"]}, {"id": "tbank", "name": "Т-Банк", "date": "", "src": "ваша таблица", "progs": [["Семейная", "", ["w:Есть"]], ["IT-ипотека", "5,99%", ["w:Есть"]]], "feat": ["w:Маткапитал в ПВ — нет, только в погашение"], "ask": ["Все остальные условия"]}, {"id": "uralsib", "name": "Банк Уралсиб", "date": "05.11.2026", "src": "презентация «Ипотека и НИА» (ноябрь 2026)", "tiles": [["Мин. ставка", "18,69%", "от 6 млн"], ["С субсидией", "от 13,69%", "застройщик"], ["ПВ", "от 20,01%", ""], ["Возраст", "21–70", "на дату окончания"], ["КВ", "1%", "рыночные"]], "calc": {"progs": [["Готовое / новостройка / рефинансирование, кредит от 6 млн", 18.69, 18.69], ["То же, кредит до 6 млн", 18.99, 18.79]], "opts": [["d", "Зарплатный клиент (тариф «Доверительный»)", -0.2, "только при кредите до 6 млн", false, [1]], ["s", "Без страхования жизни", 1.0, "", false, null], ["s", "По двум документам", 0.5, "", false, null], ["s", "ПВ 15,01–20% (только ДКП от юрлица)", 1.0, "", false, null]], "note": "С субсидией застройщика — от 13,69% (агентское вознаграждение тогда не платится)."}, "rates": [["Вторичка (готовое жильё)", "от 18,69%", ["До 6 млн — 18,99%; от 6 млн — 18,69%", "От 1,5 млн, срок 3–30 лет, ПВ от 20,01%"]], ["Новостройки", "от 13,69%", ["18,69% без субсидии", "С субсидией — от 13,69%", "ПВ 15,01–20% — по ДКП от юрлица, +1%"]], ["Рефинансирование", "от 18,69%", ["К/З до 80%, можно с доп. суммой", "С долями детей по маткапиталу", "Комбо: 3,31–16,62% (со стандартной), 7,69–14,7% (с комбо)"]], ["Под залог", "от 21,2%", ["Целевой — 21,2%, К/З до 80%", "Нецелевой — 22,2% до 6 млн, 21,2% от 6 млн; до 12 млн в Красноярске; 1–15 лет"]]], "progs": [["Семейная", "от 2%", ["1 ребёнок 10% / 6 млн; 2 — 8% / 8 млн; 3 — 6% / 10 млн; 4 — 4%; 5 — 2%", "Не более 6%: ребёнок-инвалид или ПВ от 50%", "С субсидией — до 0,01%, срок 3–15 лет", "Только квартиры/таунхаусы от застройщика (ДДУ, ДКП с первым собственником)"]], ["Комбоипотека", "3,43–16,86%", ["Один кредит, средневзвешенная ставка", "6,5–15 млн в регионах, ПВ от 20,01%", "Маткапитал — только в ПВ"]], ["«СверхЛимит»", "от 20,49%", ["Два договора: семейная + рыночная", "До 15 млн в регионах; второй кредит от 3 млн", "ПВ до 30% — +0,5%"]], ["По двум документам", "+0,5%", ["Паспорт + СНИЛС/ИНН/права/загранпаспорт", "Не для ИЖД и самозанятых", "ИП и бизнес — ПВ от 30%"]], ["Коммерция", "19,69%", ["3–13 млн для Красноярска, К/З до 70%", "Найм — до 15 лет; ИП, бизнес — до 7 лет"]], ["ИЖД (дом)", "19,69%", ["ПВ от 40,01%; не для ИП, бизнеса, самозанятых"]]], "objects": ["Квартиры", "Апартаменты", "Таунхаус", "ИЖД", "Коммерция", "Комнаты и доли (под залог)", "Машиноместа и кладовки (под залог)"], "obj_special": [["Квартира", "", ["Город от 10 тыс. жителей", "Центральное отопление, стены не из дерева"]], ["ИЖД", "ПВ 40%", ["До 3 этажей, не ранее 2010 г.", "Стены не из дерева, до 30 км от Красноярска"]], ["Коммерция", "19,69%", ["35–400 м², 1–2 этаж или цоколь, здание от 5 этажей", "Отдельный вход, окна; не общее имущество МКД"]]], "clients": ["Гражданство РФ; регистрация постоянная или временная", "Возраст 21–70 (на дату окончания)", "Стаж от 3 мес.; трудовая не нужна до 6 млн в регионах", "Самозанятые от 6 мес. (3 мес. при стаже ИП от года)", "ИП от 1 года; патент — до 15 млн; бизнес — доля от 25%", "Доход: 2-НДФЛ, справка любой формы, выписка СФР/ФНС с Госуслуг; анкеты любых банков"], "feat": ["Квартира в залоге другого банка", "По доверенности продавца, с несовершеннолетними, межрегиональные", "Сделки с разницей в стоимости", "ЭР и электронная закладная; онлайн-заказ оценки", "Маткапитал в ПВ: свои средства от 5% (бизнес — 20,01%)"], "costs": ["ЭР от 990 ₽ (Госключ) или 3 300 ₽ (Sign.me) + госпошлина", "Ипотечный аккредитив по Комбо — 3 500 ₽", "Экспресс-аккредитив с ЭР — 36 000 ₽ в регионах"], "kv": ["Рыночные: первичка, вторичка, под залог, коммерция — 1%", "Рыночная часть «СверхЛимита» — 0,8%", "Семейная — 0,25%; рефинансирование Комбо — 0,5%", "Рефинансирование ипотеки — не платится", "При субсидии застройщика — не платится"], "nonm": ["Аккредитив бесплатно от 2 млн; 1–2 млн — 4 000 ₽; до 1 млн — 6 000 ₽", "Готовится заранее, подписание онлайн", "Экспресс: раскрытие за 1 день после ЭР — 7 000 ₽", "ЭР от 990 ₽", "КВ 1 050–75 000 ₽: от 2 млн и от 8 дней; выплата 1–3 дня"], "ask": ["Контакт менеджера", "Срок раскрытия стандартного аккредитива"]}];
+const FLAGS = {"atb": {"flags": {"flat": "y", "apt": "y", "park": "y", "hl": "y", "comm": "y", "share": "y", "ref": "y", "zalog": "y"}, "rate": 16.99}, "accept": {"flags": {"flat": "y", "room": "y", "hl": "y", "park": "y", "comm": "y", "emp": "y", "self": "y", "ip": "y", "biz": "y", "sem": "y", "it": "y", "zalog": "y", "msk_pv": "y"}, "rate": 16.5}, "alfa": {"flags": {"flat": "y", "hl": "y", "park": "y", "sem": "y", "apt": "y", "comm": "y", "share": "y", "ref": "y", "msk_pv": "y"}, "rate": 16.99}, "vtb": {"flags": {"flat": "y", "room": "y", "share": "y", "hl": "y", "land": "y", "apt": "y", "park": "y", "store": "y", "ref": "y", "comm": "y", "sem": "y", "msk_pv": "q"}, "rate": 18.0}, "gpb": {"flags": {}, "rate": null}, "domrf": {"flags": {"sem": "y", "it": "y", "flat": "y", "apt": "y", "hl": "y", "park": "y", "comm": "y", "emp": "y"}, "rate": 17.1}, "levo": {"flags": {"flat": "y", "apt": "y", "hl": "y", "land": "y", "park": "y", "comm": "y", "room": "y", "share": "y", "self": "y", "ip": "y", "biz": "y", "sem": "y", "ref": "y", "zalog": "y", "msk_pv": "y", "it": "n", "emp": "y"}, "rate": 18.0}, "metall": {"flags": {"flat": "y", "apt": "y", "comm": "y", "park": "y", "store": "y", "hl": "n", "land": "n", "share": "n", "room": "n", "emp": "y", "self": "y", "ip": "y", "biz": "y", "sem": "y", "it": "y", "ref": "y", "zalog": "y", "msk_pv": "y"}, "rate": 17.5}, "mkb": {"flags": {"flat": "y", "room": "q", "share": "y", "hl": "y", "apt": "y", "park": "y", "comm": "y", "land": "n", "emp": "y", "self": "y", "ip": "y", "biz": "y", "sem": "y", "ref": "y", "zalog": "y", "msk_pv": "y"}, "rate": 17.9}, "pochta": {"flags": {}, "rate": null}, "psb": {"flags": {"ref": "n", "self": "q", "ip": "y", "biz": "y"}, "rate": 18.59}, "raif": {"flags": {}, "rate": null}, "rshb": {"flags": {"sem": "y", "ref": "n", "zalog": "n"}, "rate": null}, "sber": {"flags": {"flat": "y", "room": "y", "share": "y", "hl": "y", "land": "y", "apt": "y", "park": "y", "store": "y"}, "rate": null}, "sovk": {"flags": {"flat": "y", "apt": "y", "hl": "y", "comm": "y", "share": "y", "sem": "y", "it": "y", "ref": "y", "zalog": "y"}, "rate": 17.49}, "tbank": {"flags": {"sem": "y", "it": "y", "msk_pv": "n"}, "rate": null}, "uralsib": {"flags": {"flat": "y", "apt": "y", "comm": "y", "hl": "y", "room": "y", "park": "y", "emp": "y", "self": "y", "ip": "y", "biz": "y", "sem": "y", "ref": "y", "zalog": "y", "msk_pv": "y"}, "rate": 18.69}};
+const CMP = {"crit": [["rates", "Ставки", [["sec", "Вторичка"], ["new", "Новостройки"], ["ref", "Рефинанс."], ["min", "Мин. ставка"], ["pv", "Мин. ПВ"]], ["sec", "new", "ref", "min", "pv"]], ["progs", "Программы", [["sem", "Семейная"], ["it", "IT"], ["zal", "Под залог"], ["combo", "Комбо / 2 договора"], ["msk", "Маткапитал в ПВ"]], []], ["objects", "Объекты", [["flat", "Квартира"], ["room", "Комната"], ["share", "Доля"], ["hl", "Дом + ЗУ"], ["land", "Земля"], ["apt", "Апарт."], ["park", "Машиноместо"], ["comm", "Нежилое"]], []], ["clients", "Клиенты", [["age", "Возраст"], ["emp", "Стаж найм"], ["self", "Самозанятые"], ["ip", "ИП"], ["inc", "Доход"]], []], ["money", "КВ и расходы", [["kv", "КВ ипотека"], ["kvn", "КВ неипотека"], ["akk", "Аккредитив"], ["er", "Эл. регистрация"], ["eval", "Оценка"]], []]], "v": {"atb": {"sec": "16,99%", "new": "16,99%", "ref": "17,2%", "min": "16,99%", "pv": "20,1%", "sem": "", "it": "", "zal": "20,3%", "combo": "", "msk": "", "flat": "да", "room": "", "share": "да, ПВ 0–20%", "hl": "да, ПВ 30%", "land": "", "apt": "да", "park": "да, ПВ 30%", "comm": "18,99%", "age": "", "emp": "", "self": "", "ip": "", "inc": "выписка СФР (без неё +0,5%)", "kv": "?", "kvn": "нет", "akk": "0 ₽", "er": "9 000 ₽", "eval": "~5 000 ₽"}, "accept": {"sec": "16,5% / 12%?", "new": "16,5% / 12%?", "ref": "", "min": "12%?", "pv": "20,1%", "sem": "от 2%", "it": "5,7%", "zal": "от 15,3%", "combo": "", "msk": "да", "flat": "да", "room": "да, и секции", "share": "", "hl": "от застройщика", "land": "", "apt": "", "park": "16,5%", "comm": "16,5%", "age": "от 18", "emp": "3 мес.", "self": "да", "ip": "да", "inc": "справка банка", "kv": "1%", "kvn": "нет", "akk": "", "er": "", "eval": ""}, "alfa": {"sec": "16,99%", "new": "16,99%", "ref": "18,99%", "min": "16,99%", "pv": "20,1%", "sem": "от 2%", "it": "", "zal": "", "combo": "", "msk": "да", "flat": "да", "room": "", "share": "доли детям", "hl": "19,5–21,5%", "land": "", "apt": "да", "park": "да", "comm": "да", "age": "21–75", "emp": "", "self": "", "ip": "", "inc": "2-НДФЛ, СЗИ, справка банка", "kv": "0,8–1,1%", "kvn": "?", "akk": "0 ₽", "er": "8 900 ₽ (Лайт)", "eval": ""}, "vtb": {"sec": "18%", "new": "18% / от 13,9%", "ref": "18,6%", "min": "15,6%?", "pv": "", "sem": "от 6%", "it": "", "zal": "", "combo": "", "msk": "комнаты да, доли нет", "flat": "да", "room": "да", "share": "до целого", "hl": "18,4%", "land": "18,8%", "apt": "да", "park": "19,5%", "comm": "20,5%", "age": "18–75", "emp": "", "self": "", "ip": "", "inc": "справка, СЗИ, 2-НДФЛ", "kv": "нет", "kvn": "?", "akk": "", "er": "690 ₽ с СБР", "eval": ""}, "gpb": {}, "domrf": {"sec": "17,8%", "new": "17,8%", "ref": "?", "min": "17,1%", "pv": "20,01%", "sem": "от 2%", "it": "6%", "zal": "", "combo": "", "msk": "", "flat": "да", "room": "", "share": "", "hl": "да (+0,9% загородн.)", "land": "", "apt": "да", "park": "+2%", "comm": "19,1–19,3%", "age": "21–75", "emp": "3 мес.", "self": "", "ip": "", "inc": "Цифровой профиль", "kv": "0,6%", "kvn": "1 000–11 000 ₽", "akk": "0 ₽", "er": "0 ₽", "eval": "3–5 тыс. ₽"}, "levo": {"sec": "18% (ЗП 17%)", "new": "18% (ЗП 17%)", "ref": "18%", "min": "15% (выкуп 6%)", "pv": "20,01%", "sem": "от 2%", "it": "нет", "zal": "18%", "combo": "да", "msk": "да", "flat": "да", "room": "20%, ПВ 30,01%", "share": "до целого, ПВ 30,01%", "hl": "да", "land": "24,5%", "apt": "да", "park": "20%", "comm": "20%, ПВ 30%", "age": "21–80", "emp": "3 мес. (общий 1 год)", "self": "от 6 мес.", "ip": "от 1 года (УСН, патент)", "inc": "СФР, 2-НДФЛ; справка банка + трудовая", "kv": "нет", "kvn": "3 000 ₽", "akk": "0 ₽ (НИА); ипотека 10–15 тыс.", "er": "8 000 / 10 000 ₽ + пошлина", "eval": "?"}, "metall": {"sec": "17,5%", "new": "17,5%", "ref": "17,5% (+1,5% до залога), доп. до 1 млн", "min": "17,5%", "pv": "20,01%", "sem": "2–10%, 15 лет", "it": "5,99%", "zal": "19,9%", "combo": "нет", "msk": "да", "flat": "да", "room": "нет", "share": "нет", "hl": "нет", "land": "нет", "apt": "да", "park": "18,3–18,5%", "comm": "18,59–19,39%", "age": "18–70", "emp": "3 мес.", "self": "от 1 года", "ip": "от 2 лет (1–2: +0,5%)", "inc": "справка банка при отчислениях", "kv": "0,1% (до 15 000 ₽); залог 0,4%", "kvn": "", "akk": "3 500 ₽", "er": "9 000 ₽", "eval": "4 500 ₽"}, "mkb": {"sec": "17,9%", "new": "17,9%", "ref": "17,9%", "min": "?", "pv": "20,01%", "sem": "от 2%", "it": "", "zal": "18,9%", "combo": "Сверхлимит", "msk": "да", "flat": "да", "room": "гостиничн. тип", "share": "посл. доля", "hl": "18,9%", "land": "нет", "apt": "да", "park": "19,9%", "comm": "18,9%", "age": "18–75", "emp": "1–3 мес.", "self": "от 6 мес.", "ip": "от 1 года", "inc": "СФР, 2-НДФЛ, выписки", "kv": "0,6 / 0,9%", "kvn": "", "akk": "3 500 ₽", "er": "9 000 ₽", "eval": "по тарифу"}, "pochta": {}, "psb": {"sec": "18,59%", "new": "18,05%", "ref": "нет", "min": "?", "pv": "", "sem": "", "it": "", "zal": "", "combo": "", "msk": "", "age": "21–70", "emp": "", "self": "?", "ip": "УСН от 2 лет, ПВ 40%", "inc": "", "kv": "", "kvn": "", "akk": "3 500 ₽", "er": "10 000 ₽", "eval": "3–5 тыс. ₽"}, "raif": {"sem": "только сотрудникам"}, "rshb": {"sem": "да, 15 лет", "inc": "документально", "kvn": "нет"}, "sber": {"sem": "15 лет без субсидии", "flat": "да", "room": "да", "share": "до целого", "hl": "да", "land": "да", "apt": "да", "park": "да", "kv": "нет"}, "sovk": {"sec": "?", "new": "17,49% / 12,99%", "ref": "12,99–16,99%", "min": "12,99%", "pv": "15%", "sem": "0,35–8,5%", "it": "да", "zal": "?", "combo": "Мегалимит", "msk": "", "flat": "да", "room": "", "share": "доли детям", "hl": "ПВ 30%", "land": "", "apt": "да", "park": "", "comm": "19,99%", "age": "до 85", "emp": "", "self": "", "ip": "", "inc": "любой способ", "kv": "0,8–1,5%", "kvn": "0,15% до 25 000 ₽", "akk": "0 ₽", "er": "7 000 ₽ / акция", "eval": "3 500 ₽"}, "tbank": {"sem": "да", "it": "5,99%", "msk": "нет"}, "uralsib": {"sec": "18,69%", "new": "18,69% / 13,69%", "ref": "18,69%", "min": "18,69%", "pv": "20,01%", "sem": "от 2%", "it": "", "zal": "21,2%", "combo": "Комбо, СверхЛимит", "msk": "да", "flat": "да", "room": "под залог", "share": "под залог", "hl": "ИЖД, ПВ 40%", "land": "", "apt": "да", "park": "под залог", "comm": "19,69%", "age": "21–70", "emp": "3 мес.", "self": "от 6 мес.", "ip": "от 1 года", "inc": "любые справки, СФР/ФНС", "kv": "1% (сем. 0,25%)", "kvn": "1 050–75 000 ₽", "akk": "0 ₽ от 2 млн", "er": "от 990 ₽", "eval": "онлайн-заказ"}}};
+// Правила для детального подбора. null = нет данных («?»), false/-1 = не допускается.
+// rate: базовые ставки по программам (число) — оценка; sem: true = семейная по госусловиям; adj: дисконты/надбавки, которые зависят от ответов.
+const RULES = {
+ atb:{age:[18,null],cit:null,emp:null,self:null,ip:null,biz:null,pv:{def:20.1,hl:30,park:30,comm:30,share:0},term:30,max:50,
+  rate:{sec:16.99,new:16.99,ref:17.2,zal:20.3,dv:2},adj:{zp:-0.5,noinc:0.5},kv:null,und:null,pledge:null,
+  note:"16,99% — уточнить, с ЗП-дисконтом или без"},
+ accept:{age:[18,null],cit:null,emp:3,self:true,ip:true,biz:true,pv:{def:20.1},term:30,max:null,
+  rate:{sec:16.5,new:16.5,it:5.7,zal:15.3},sem:true,semTerm:15,adj:{},kv:{def:1},und:null,pledge:true,
+  note:"12% на вторичку и первичку — «с аккредитивом», условия уточнить"},
+ alfa:{age:[21,75],cit:null,emp:null,self:null,ip:null,biz:null,pv:{def:20.1},term:30,max:35,
+  rate:{sec:17.99,new:17.99,ref:18.99},sem:true,adj:{zp:-0.4,fast:-0.4},kv:{def:0.8,sem:0.3},und:null,pledge:null,
+  note:"16,99% — при ПВ от 50% и кредите от 10 млн со всеми дисконтами; дом с ЗУ 19,5–21,5% без дисконтов"},
+ vtb:{age:[18,75],cit:null,emp:null,self:null,ip:null,biz:null,pv:{def:null},term:30,max:null,
+  rate:{sec:18,new:18,ref:18.6},sem:true,adj:{zp:-0.4,big6:-0.5,pv50:-0.5,ins:-1},kv:{def:0},und:"до 70% кадастра",pledge:false,
+  note:"Суммируются ли дисконты — уточнить"},
+ gpb:{},
+ domrf:{age:[21,75],cit:"rf",emp:3,self:null,ip:null,biz:null,pv:{def:20.01},term:30,max:30,
+  rate:{sec:17.8,new:17.8,it:6,dv:2},sem:true,adj:{zp:-0.2,big8:-0.5,pvlt50:1,noins:1,noinc:0.5},kv:{def:0.6},und:"до суммы кредита",pledge:null},
+ levo:{age:[21,80],cit:null,emp:3,self:6,ip:12,biz:true,pv:{def:20.01,room:30.01,share:30.01,comm:30.01},term:25,max:20,
+  rate:{sec:18,new:18,ref:18,zal:18},sem:true,semTerm:25,adj:{zp:-1,noins:1,noinc:2},kv:{def:0},und:"до суммы кредита + 20%",pledge:true,
+  note:"Выкуп ставки до 15% за 6% от суммы кредита — только при официальном доходе"},
+ metall:{age:[18,70],cit:null,emp:3,self:12,ip:12,biz:12,pv:{def:20.01,comm:30.01,park:30.01},term:23,max:15,
+  rate:{sec:17.5,new:17.5,ref:17.5,zal:19.9,it:5.99},sem:true,semTerm:15,adj:{},kv:{def:0.1,zal:0.4,cap:15000},und:"есть, расчёт через счета",pledge:null,
+  note:"Минимум 17,5%; надбавки: созаёмщик +0,3, общий стаж 6–12 мес. +0,3, ИП/бизнес 1–2 года +0,5; комбо нет"},
+ mkb:{age:[18,75],cit:"rf_by",emp:1,self:6,ip:12,biz:12,pv:{def:20.01,ip:20,biz:20},term:30,max:200,
+  rate:{sec:17.9,new:17.9,ref:17.9,zal:18.9},sem:true,adj:{zp:-0.5,nokv:-0.3},kv:{def:0.6},und:"сумма кредита + ПВ распиской",pledge:true,
+  note:"Коммерция, дом с ЗУ — 18,9%; машиноместо — 19,9%"},
+ pochta:{},
+ psb:{age:[21,70],cit:null,emp:null,self:null,ip:24,biz:true,pv:{def:null,ip:40,biz:40},term:30,max:null,
+  rate:{sec:18.59,new:18.05},sem:null,adj:{},kv:null,und:"до суммы кредита",pledge:null,refNo:true},
+ raif:{closed:"Ипотеку выдают только сотрудникам банка"},
+ rshb:{age:[null,null],rate:{},sem:true,semTerm:15,semOnly:true},
+ sber:{age:[null,null],rate:{},sem:true,semTerm:15,kv:{def:0}},
+ sovk:{age:[null,85],cit:null,emp:null,self:null,ip:null,biz:null,pv:{def:15,sem:20.01,it:20.01,hl:30},term:30,max:null,
+  rate:{new:17.49,ref:16.99,it:null},sem:"sovk",adj:{},kv:{def:0.8,sem:0.5},und:null,pledge:true,
+  note:"С субсидией застройщика — 12,99%; ставка по вторичке не указана"},
+ tbank:{age:[null,null],rate:{it:5.99},sem:true,msk:false},
+ uralsib:{age:[21,70],cit:"rf",emp:3,self:6,ip:12,biz:12,pv:{def:20.01,hl:40.01,comm:30},term:30,max:null,
+  rate:{sec:18.69,new:18.69,ref:18.69,zal:21.2},sem:true,adj:{lt6:0.3,zpLt6:-0.2,noins:1,noinc:0.5},kv:{def:1,sem:0.25},und:null,pledge:true},
+};
+
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  const fmt=x=>{let s=(Math.round(x*100)/100).toFixed(2).replace(/0$/,'').replace(/\.0$/,'');return s.replace('.',',')};
+  const SECS=[["rates","Ставки"],["progs","Программы"],["objects","Объекты"],["clients","Клиенты и доходы"],["feat","Фишки"],["costs","Расходы"],["under","Занижение"],["kv","Вознаграждение"],["nonm","Неипотечные"],["ask","Уточнить"],["docs","Документы"],["contact","Контакт"]];
+  const has=(c,k)=>k==='objects'?((c.objects||[]).length||(c.obj_special||[]).length):(c[k]||[]).length;
+
+  function item(t){
+    if(t.startsWith('w:')) return esc(t.slice(2))+' <span class="tag">ваши данные</span>';
+    if(t.startsWith('?:')) return esc(t.slice(2))+' <span class="tag q">уточнить</span>';
+    return esc(t);
+  }
+  function table(t){
+    const rows=t.slice(6).split(';').map(r=>r.split('|'));
+    return '<div class="tblw"><table class="mini"><tr>'+rows[0].map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>'+rows.slice(1).map(r=>'<tr>'+r.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</table></div>';
+  }
+  function body(items){
+    const tbl=items.filter(t=>t.startsWith('TABLE:')).map(table).join('');
+    const li=items.filter(t=>!t.startsWith('TABLE:'));
+    return tbl+(li.length?'<ul>'+li.map(t=>'<li>'+item(t)+'</li>').join('')+'</ul>':'');
+  }
+  function expand(list){
+    return list.map(([n,r,items])=> items&&items.length
+      ? '<details><summary><span class="nm">'+esc(n)+'</span><span class="rt">'+esc(r||'')+'</span></summary><div class="body">'+body(items)+'</div></details>'
+      : '<details><summary class="leaf" onclick="return false"><span class="nm">'+esc(n)+'</span><span class="rt">'+esc(r||'')+'</span></summary></details>').join('<div style="height:6px"></div>');
+  }
+  function secHTML(c,k){
+    if(k==='rates'||k==='progs') return expand(c[k]);
+    if(k==='docs') return '<ul>'+c[k].map(x=>'<li>'+(x.startsWith('**')?'<b>'+esc(x.slice(2).split(':')[0])+':</b>'+esc(x.slice(2).slice(x.slice(2).indexOf(':')+1)):item(x))+'</li>').join('')+'</ul>';
+    if(k==='objects') return (c.objects&&c.objects.length?'<div class="objs">'+c.objects.map(o=>'<span class="obj">'+esc(o)+'</span>').join('')+'</div>':'')+((c.obj_special||[]).length?'<div style="height:4px"></div>'+expand(c.obj_special):'');
+    return '<ul>'+c[k].map(t=>'<li>'+item(t)+'</li>').join('')+'</ul>';
+  }
+
+  // ---- tabs
+  const tabs=[['t-bank','p-bank'],['t-tbl','p-tbl'],['t-sec','p-sec'],['t-pick','p-pick']];
+  function show(id){tabs.forEach(([t,p])=>{$(t).setAttribute('aria-selected',t===id);$(p).hidden=t!==id});store.set('bk2-tab',id)}
+  tabs.forEach(([t])=>$(t).addEventListener('click',()=>show(t)));
+
+  // ---- bank card
+  let cur=store.get('bk2-bank')||'domrf'; if(!CARDS.find(c=>c.id===cur)) cur=CARDS[0].id;
+  let on=null; // null = всё
+  const filled=c=>SECS.reduce((n,[k])=>n+(has(c,k)?1:0),0)+((c.tiles||[]).length?1:0);
+  function chips(){
+    $('bank-chips').innerHTML=CARDS.map(c=>'<button class="chip'+(filled(c)>1?'':' empty')+'" data-b="'+c.id+'" aria-pressed="'+(c.id===cur)+'">'+esc(c.name.replace(/^Банк /,''))+'</button>').join('');
+  }
+  function card(){
+    const c=CARDS.find(x=>x.id===cur); chips();
+    let h='<div class="head"><h2>'+esc(c.name)+'</h2><span class="upd">'+(c.date?'Обновлено '+esc(c.date):'Дата не указана')+'</span></div>';
+    if(c.alert) h+='<div class="alert">'+esc(c.alert)+'</div>';
+    if((c.tiles||[]).length) h+='<div class="tiles">'+c.tiles.map((t,i)=>'<div class="tile'+(/Мин/.test(t[0])?' main':'')+'"><span class="l">'+esc(t[0])+'</span><span class="v">'+esc(t[1])+'</span><span class="s">'+(t[2]==='w'?'<span class="tag" style="margin:0">ваши данные</span>':esc(t[2]))+'</span></div>').join('')+'</div>';
+    if(c.calc){
+      const k=c.calc;
+      h+='<div class="rate"><h3>Ставка: из чего складывается</h3><div class="rate-grid"><div>'
+        +'<label class="lbl" for="cprog">Программа</label><select id="cprog">'+k.progs.map((p,i)=>'<option value="'+i+'">'+esc(p[0])+(k.fromMin?' — минимум '+fmt(p[2])+'%':' — базовая '+fmt(p[1])+'%')+'</option>').join('')+'</select>';
+      ['f','d','s'].forEach(g=>{const os=k.opts.map((o,i)=>[o,i]).filter(([o])=>o[0]===g); if(!os.length) return;
+        h+='<div class="lbl" style="margin-top:12px">'+({f:'Выкуп ставки',d:'Дисконты',s:'Надбавки'}[g])+'</div>'+os.map(([o,i])=>'<label class="opt" data-i="'+i+'"><input type="checkbox" data-v="'+o[2]+'"'+(o[4]?' checked':'')+'><span>'+esc(o[1])+(o[3]?'<small>'+esc(o[3])+'</small>':'')+'</span><span class="d '+(o[0]==='f'||o[2]<0?'m':'p')+'">'+(o[0]==='f'?'= '+fmt(o[2])+'%':(o[2]<0?'−':'+')+fmt(Math.abs(o[2])))+'</span></label>').join('');});
+      h+='</div><div class="result" aria-live="polite"><span class="lbl">Ставка клиента</span><span class="big" id="cres"></span><span class="f" id="cform"></span><span class="rnote" id="chint"></span>'+(k.note?'<span class="rnote">'+item(k.note)+'</span>':'')+'</div></div></div>';
+    } else if(c.calc_note){ h+='<div class="rate"><h3>Ставка и дисконты</h3><div class="rnote">'+item('?:'+c.calc_note)+'</div></div>'; }
+    const avail=SECS.filter(([k])=>has(c,k));
+    if(!avail.length){ h+='<p class="none">По банку пока нет данных — заполните анкету.</p>'; $('card').innerHTML=h; return; }
+    const act=on?avail.filter(([k])=>on.has(k)):avail; const shown=act.length?act:avail;
+    h+='<div><div class="lbl" style="margin-bottom:6px">Разделы</div><div class="chips" id="sec-tabs"><button class="chip" data-k="__all" aria-pressed="'+(!on||!act.length)+'">Всё</button>'+avail.map(([k,n])=>'<button class="chip" data-k="'+k+'" aria-pressed="'+(!!on&&on.has(k))+'">'+n+'</button>').join('')+'</div></div>';
+    h+=shown.map(([k,n])=>'<div class="sec'+(k==='ask'?' ask':'')+'"><h3>'+(k==='ask'?'Уточнить у банка':n)+'</h3>'+secHTML(c,k)+'</div>').join('');
+    $('card').innerHTML=h;
+    if(c.calc) setupCalc(c.calc);
+  }
+  function setupCalc(k){
+    const sel=$('cprog'), opts=[...document.querySelectorAll('#card .opt')];
+    function calc(){
+      const pi=+sel.value, p=k.progs[pi]; let r=p[1], parts=[fmt(p[1])];
+      const fixL=opts.find(l=>{const o=k.opts[+l.dataset.i]; return o[0]==='f'&&(!o[5]||o[5].includes(pi))&&l.querySelector('input').checked;});
+      const fx=fixL?k.opts[+fixL.dataset.i]:null; if(fx){ r=fx[2]; parts=null; }
+      opts.forEach(l=>{const o=k.opts[+l.dataset.i]; const ok=!o[5]||o[5].includes(pi); l.hidden=!ok; const b=l.querySelector('input');
+        l.style.opacity=(fx&&o[0]!=='f')?'.45':''; if(!ok||!b.checked||o[0]==='f') return; if(fx) return; r+=o[2]; parts.push((o[2]<0?'− ':'+ ')+fmt(Math.abs(o[2])));});
+      if(k.fromMin&&!fx){ r=p[2]; parts=['минимум '+fmt(p[2])];
+        opts.forEach(l=>{const o=k.opts[+l.dataset.i]; if(o[5]&&!o[5].includes(pi)) return; const on=l.querySelector('input').checked;
+          if(o[0]==='d'&&!on){ r+=-o[2]; parts.push('+ '+fmt(-o[2])+' без «'+o[1].split(' (')[0].toLowerCase()+'»'); }
+          if(o[0]==='s'&&on){ r+=o[2]; parts.push('+ '+fmt(o[2])); } }); }
+      if(k.floor&&!fx){ const fl=p[2]; if(fl!=null&&r<fl-1e-9){ parts.push('→ не ниже '+fmt(fl)); r=fl; } }
+      $('cres').textContent=fmt(r)+'%'; $('cform').textContent= parts ? parts.join(' ')+' = '+fmt(r) : fx[1]+': '+fx[3] + (r!==fx[2] ? ' · с надбавками '+fmt(r)+'%' : '');
+      const m=p[2]; $('chint').textContent= m==null ? '' : (Math.abs(r-m)<1e-9?'Это минимальная ставка по программе.':'Минимум по программе — '+fmt(m)+'%. Разница '+(r>m?'+':'')+fmt(r-m)+'.');
+    }
+    sel.addEventListener('change',calc); opts.forEach(l=>l.querySelector('input').addEventListener('change',calc)); calc();
+  }
+  $('bank-chips').addEventListener('click',e=>{const b=e.target.closest('[data-b]'); if(!b) return; cur=b.dataset.b; store.set('bk2-bank',cur); card();});
+  $('card').addEventListener('click',e=>{const b=e.target.closest('#sec-tabs [data-k]'); if(!b) return; const k=b.dataset.k;
+    if(k==='__all') on=null; else { if(!on) on=new Set([k]); else { on.has(k)?on.delete(k):on.add(k); if(!on.size) on=null; } }
+    card();});
+
+  // ---- раздел по всем банкам
+  let sk=store.get('bk2-sec')||'nonm'; if(!SECS.find(s=>s[0]===sk)) sk='nonm';
+  function secAll(){
+    $('sec-chips').innerHTML=SECS.map(([k,n])=>'<button class="chip" data-k="'+k+'" aria-pressed="'+(k===sk)+'">'+n+'</button>').join('');
+    const list=CARDS.filter(c=>has(c,sk));
+    $('sec-out').innerHTML=list.length?list.map(c=>'<div class="cmp-row"><h4>'+esc(c.name)+'</h4>'+secHTML(c,sk)+'</div>').join(''):'<p class="none">Ни по одному банку нет данных в этом разделе.</p>';
+  }
+  $('sec-chips').addEventListener('click',e=>{const b=e.target.closest('[data-k]'); if(!b) return; sk=b.dataset.k; store.set('bk2-sec',sk); secAll();});
+
+  // ---- подбор
+  const F={objects:[["flat","Квартира"],["room","Комната"],["share","Доля"],["hl","Дом + ЗУ"],["land","Земля"],["apt","Апартаменты"],["park","Машиноместо"],["store","Кладовка"],["comm","Нежилое"]],
+           clients:[["emp","Найм"],["self","Самозанятый"],["ip","ИП"],["biz","Собственник бизнеса"]],
+           progs:[["sem","Семейная"],["it","IT"],["ref","Рефинансирование"],["zalog","Кредит под залог"],["msk_pv","Маткапитал в ПВ"]]};
+  const FN={}; Object.values(F).forEach(a=>a.forEach(([k,n])=>FN[k]=n));
+  const sel=new Set();
+  function pick(){
+    [['objects','f-objects'],['clients','f-clients'],['progs','f-progs']].forEach(([g,id])=>$(id).innerHTML=F[g].map(([k,n])=>'<button class="chip" data-f="'+k+'" aria-pressed="'+sel.has(k)+'">'+n+'</button>').join(''));
+    const keys=[...sel];
+    if(!keys.length){$('pick-out').innerHTML='<p class="none">Отметьте объект, клиента или программу — покажу подходящие банки.</p>';return}
+    const fit=[],part=[],no=[];
+    CARDS.forEach(c=>{const fl=(FLAGS[c.id]||{}).flags||{}; const st=keys.map(k=>fl[k]||'');
+      if(st.includes('n')) no.push([c,keys.filter((k,i)=>st[i]==='n')]);
+      else if(st.every(x=>x==='y')) fit.push([c]);
+      else if(st.some(x=>x==='y'||x==='q')) part.push([c,keys.filter((k,i)=>st[i]!=='y')]);});
+    const rate=c=>(FLAGS[c.id]||{}).rate||99; fit.sort((a,b)=>rate(a[0])-rate(b[0])); part.sort((a,b)=>rate(a[0])-rate(b[0]));
+    const rc=(c,cls,txt)=>'<div class="rcard '+cls+'"><div class="top"><b>'+esc(c.name)+'</b>'+((FLAGS[c.id]||{}).rate?'<span class="mono">от '+fmt(FLAGS[c.id].rate)+'%</span>':'')+'</div><span style="font-size:13.5px">'+txt+'</span><button class="linkbtn" data-open="'+c.id+'">Открыть карточку</button></div>';
+    let h=fit.length?fit.map(([c])=>rc(c,'','Подходит по всем отметкам')).join(''):'<p class="none">Банков, где подтверждено всё выбранное, пока нет.</p>';
+    if(part.length) h+='<div class="lbl">Возможно — нет данных по части условий</div>'+part.map(([c,u])=>rc(c,'part','Нет данных: '+esc(u.map(k=>FN[k]).join(', ')))).join('');
+    if(no.length) h+='<details><summary><span class="nm">Не подходят ('+no.length+')</span></summary><div class="body"><ul>'+no.map(([c,m])=>'<li><b>'+esc(c.name)+'</b> — '+esc(m.map(k=>FN[k]).join(', '))+': нет</li>').join('')+'</ul></div></details>';
+    $('pick-out').innerHTML=h;
+  }
+  ['f-objects','f-clients','f-progs'].forEach(id=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-f]'); if(!b) return; const k=b.dataset.f; sel.has(k)?sel.delete(k):sel.add(k); pick();}));
+  $('pick-out').addEventListener('click',e=>{const b=e.target.closest('[data-open]'); if(!b) return; cur=b.dataset.open; on=null; card(); show('t-bank'); window.scrollTo(0,0);});
+
+  // ---- сравнительная таблица
+  let ck=store.get('bk2-crit')||'rates', sortCol=null, sortAsc=true;
+  const num=s=>{const m=String(s||'').replace(/\s/g,'').match(/(\d+(?:,\d+)?)/); return m?parseFloat(m[1].replace(',','.')):null;};
+  function tbl(){
+    if(!CMP.crit.find(c=>c[0]===ck)) ck='rates';
+    $('tbl-chips').innerHTML=CMP.crit.map(c=>'<button class="chip" data-c="'+c[0]+'" aria-pressed="'+(c[0]===ck)+'">'+c[1]+'</button>').join('');
+    const cr=CMP.crit.find(c=>c[0]===ck), cols=cr[2], best=cr[3]||[];
+    let rows=CARDS.map(c=>({c,v:CMP.v[c.id]||{}})).filter(r=>cols.some(([k])=>r.v[k]));
+    if(sortCol){ rows.sort((a,b)=>{const x=num(a.v[sortCol]),y=num(b.v[sortCol]); if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; return sortAsc?x-y:y-x;}); }
+    const mins={}; best.forEach(k=>{const ns=rows.map(r=>/\?/.test(r.v[k]||'')?null:num(r.v[k])).filter(x=>x!=null); if(ns.length) mins[k]=Math.min(...ns);});
+    let h='<thead><tr><th data-s="">Банк</th>'+cols.map(([k,n])=>'<th data-s="'+k+'" class="'+(sortCol===k?'sorted':'')+'">'+esc(n)+(sortCol===k?(sortAsc?' ↑':' ↓'):'')+'</th>').join('')+'</tr></thead><tbody>';
+    h+=rows.map(r=>'<tr><td><button class="bk" data-open="'+r.c.id+'">'+esc(r.c.name.replace(/^Банк /,''))+'</button></td>'+cols.map(([k])=>{const v=r.v[k]||''; let cls='';
+      if(v==='?'||/\?$/.test(v)) cls='q'; else if(/^нет/.test(v)) cls='no'; else if(k in mins && num(v)===mins[k]) cls='best';
+      return '<td class="'+cls+'">'+esc(v)+'</td>';}).join('')+'</tr>').join('');
+    if(!rows.length) h+='<tr><td colspan="'+(cols.length+1)+'" class="none">Нет данных</td></tr>';
+    $('tbl').innerHTML=h+'</tbody>';
+  }
+  $('tbl-chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]'); if(!b) return; ck=b.dataset.c; sortCol=null; store.set('bk2-crit',ck); tbl();});
+  $('tbl').addEventListener('click',e=>{const o=e.target.closest('[data-open]'); if(o){cur=o.dataset.open; on=null; card(); show('t-bank'); window.scrollTo(0,0); return;}
+    const th=e.target.closest('th'); if(!th) return; const s=th.dataset.s; if(!s){sortCol=null;} else if(sortCol===s) sortAsc=!sortAsc; else {sortCol=s; sortAsc=true;} tbl();});
+
+  // ---- режимы подбора
+  $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-m]'); if(!b) return; const m=b.dataset.m;
+    [...$('mode').children].forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===m)); $('m-quick').hidden=m!=='quick'; $('m-full').hidden=m!=='full'; store.set('bk2-mode',m); if(m==='full') full();});
+  // ---- детальный подбор
+  $('d-zp').innerHTML+=CARDS.filter(c=>RULES[c.id]&&RULES[c.id].adj&&RULES[c.id].adj.zp!=null).map(c=>'<option value="'+c.id+'">'+esc(c.name.replace(/^Банк /,''))+'</option>').join('');
+  const val=id=>$(id).value, chk=id=>$(id).checked, nval=id=>{const v=parseFloat(String($(id).value).replace(/\s/g,'').replace(',','.'));return isFinite(v)?v:0};
+  const rub=v=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(v))+' ₽';
+  const OBJN={flat:'квартиру',room:'комнату',share:'долю',hl:'дом с ЗУ',land:'землю',apt:'апартаменты',park:'машиноместо',comm:'нежилое'};
+  function semRate(r,kids,inv,pv,obj){ if(r.sem==='sovk'){const t=[8.5,6.5,4.5,2.5,1][Math.min(Math.max(kids,1),5)-1]; return t;}
+    let x=[10,8,6,4,2][Math.min(Math.max(kids,1),5)-1]; if((inv||pv>=50||obj==='hl')&&x>6) x=6; return x; }
+  function full(){
+    const prog=val('d-prog'), cit=val('d-cit'), age=nval('d-age'), emp=val('d-emp'), mon=nval('d-mon'), zp=val('d-zp'), inc=chk('d-inc');
+    const kids=nval('d-kids'), young=chk('d-young'), inv=chk('d-inv'), obj=val('d-obj'), pledged=chk('d-pledge');
+    const price=nval('d-price'), pv=nval('d-pv'), term=nval('d-term'), msk=chk('d-msk'), und=chk('d-und'), ins=chk('d-ins');
+    $('d-fam').hidden=prog!=='sem'; $('d-mon-l').textContent=emp==='emp'?'Стаж на текущем месте, мес.':'Срок регистрации / бизнеса, мес.';
+    const loan=Math.max(0,price*(1-pv/100)), ageEnd=age+term;
+    $('d-sum').innerHTML='Кредит <b>'+rub(loan)+'</b> · ПВ '+rub(price-loan)+' · возраст на конец срока <b>'+ageEnd+'</b>'+(prog==='sem'&&!(young||inv)?' · <b style="color:var(--bad)">семейная недоступна: нужен ребёнок до 7 лет или ребёнок-инвалид</b>':'');
+    const res=CARDS.map(c=>{
+      const r=RULES[c.id]||{}, fl=(FLAGS[c.id]||{}).flags||{}, no=[], unk=[], notes=[];
+      if(r.closed){ no.push(r.closed); return {c,no,unk,notes}; }
+      if(!Object.keys(r).length){ unk.push('нет данных по банку'); return {c,no,unk,notes,empty:true}; }
+      let rate=null, parts=[];
+      if(r.semOnly&&prog!=='sem') no.push('только семейная ипотека');
+      if(prog==='sem'){
+        if(!(young||inv)) no.push('нет ребёнка до 7 лет или ребёнка-инвалида');
+        if(!r.sem) (r.sem===null?unk:no).push('семейная — '+(r.sem===null?'нет данных':'не выдаёт'));
+        else { rate=semRate(r,kids,inv,pv,obj); parts=[(r.sem==='sovk'?'семейная Совкомбанка (до), ':'семейная: ')+fmt(rate)+'%']; if(r.semTerm&&term>r.semTerm) notes.push('без субсидии застройщика срок — '+r.semTerm+' лет'); }
+      } else if(prog==='ref'&&r.refNo){ no.push('рефинансирование не делает'); }
+      else {
+        const b=(r.rate||{})[prog];
+        if(b==null) unk.push('ставка по программе не указана');
+        else { rate=b; parts=['базовая '+fmt(b)];
+          const a=r.adj||{}; const add=(v,l)=>{rate+=v; parts.push((v<0?'− ':'+ ')+fmt(Math.abs(v))+' '+l);};
+          if(['sec','new','ref','zal'].includes(prog)){
+            if(a.zp!=null&&zp===c.id) add(a.zp,'ЗП');
+            if(a.zpLt6!=null&&zp===c.id&&loan<6e6) add(a.zpLt6,'ЗП');
+            if(a.lt6!=null&&loan<6e6) add(a.lt6,'кредит до 6 млн');
+            if(a.big6!=null&&loan>=6e6) add(a.big6,'от 6 млн');
+            if(a.big8!=null&&loan>=8e6) add(a.big8,'от 8 млн');
+            if(a.pv50!=null&&pv>=50) add(a.pv50,'ПВ от 50%');
+            if(a.pvlt50!=null&&pv<50) add(a.pvlt50,'ПВ до 50%');
+            if(a.ins!=null&&ins) add(a.ins,'страхование');
+            if(a.noins!=null&&!ins) add(a.noins,'без страхования');
+            if(a.noinc!=null&&!inc) add(a.noinc,'доход не подтверждён');
+            if(a.fast!=null) notes.push('ещё −0,4% за быстрый выход и −0,2% Alfa Only — если действуют');
+          }
+        }
+      }
+      // возраст
+      if(r.age){ if(r.age[0]&&age<r.age[0]) no.push('возраст от '+r.age[0]);
+        if(r.age[1]){ if(ageEnd>r.age[1]) no.push('на конец срока '+ageEnd+' лет, допустимо до '+r.age[1]); } else unk.push('максимальный возраст'); }
+      // гражданство
+      if(cit!=='rf'){ if(r.cit==='rf') no.push('только граждане РФ'); else if(r.cit==='rf_by'&&cit!=='by') no.push('только РФ и Беларусь'); else if(r.cit==null) unk.push('иностранцы'); }
+      // занятость
+      const em=r[emp]; if(emp==='emp'){ if(r.emp&&mon<r.emp) no.push('стаж от '+r.emp+' мес.'); else if(r.emp==null) unk.push('минимальный стаж'); }
+      else { if(em===false||em===-1) no.push({self:'самозанятых',ip:'ИП',biz:'бизнес'}[emp]+' не кредитует'); else if(typeof em==='number'&&mon<em) no.push('срок регистрации от '+em+' мес.'); else if(em==null) unk.push({self:'самозанятые',ip:'ИП',biz:'собственники бизнеса'}[emp]); }
+      // объект
+      const of=fl[obj]; if(of==='n') no.push('не кредитует '+OBJN[obj]); else if(of!=='y') unk.push('кредитует ли '+OBJN[obj]);
+      // ПВ
+      if(r.pv){ const pm=[r.pv[obj],r.pv[emp],r.pv[prog],r.pv.def].find(x=>x!==undefined); if(pm==null) unk.push('минимальный ПВ'); else if(pv<pm) no.push('ПВ от '+fmt(pm)+'%'); }
+      // сумма, срок
+      if(r.max&&loan>r.max*1e6) no.push('кредит до '+r.max+' млн');
+      if(r.term&&term>r.term) no.push('срок до '+r.term+' лет');
+      if(msk){ if(fl.msk_pv==='n'||r.msk===false) no.push('маткапитал в ПВ нельзя'); else if(fl.msk_pv!=='y') unk.push('маткапитал в ПВ'); }
+      if(pledged){ if(r.pledge===false) no.push('объект в залоге другого банка — нельзя'); else if(r.pledge==null) unk.push('объект в залоге другого банка'); }
+      if(und){ if(r.und) notes.push('занижение: '+r.und); else unk.push('занижение'); }
+      if(r.note) notes.push(r.note);
+      // платёж и КВ
+      let pay=null; if(rate!=null&&loan>0){ const m=rate/1200,n=term*12; pay=m>0?loan*m/(1-Math.pow(1+m,-n)):loan/n; }
+      let kv=null; if(r.kv){ const p=prog==='sem'&&r.kv.sem!=null?r.kv.sem:(r.kv[prog]!=null?r.kv[prog]:r.kv.def); if(p!=null){ kv=loan*p/100; if(r.kv.cap&&r.kv[prog]==null) kv=Math.min(kv,r.kv.cap); } }
+      return {c,no,unk,notes,rate,parts,pay,kv,kvKnown:!!r.kv};
+    });
+    const ok=res.filter(x=>!x.no.length&&!x.empty&&!x.unk.length), part=res.filter(x=>!x.no.length&&!x.empty&&x.unk.length), bad=res.filter(x=>x.no.length), empty=res.filter(x=>x.empty);
+    const srt=val('d-sort'); const key=x=>srt==='kv'?-(x.kv||0):(x.rate==null?99:x.rate); ok.sort((a,b)=>key(a)-key(b)); part.sort((a,b)=>key(a)-key(b));
+    const cardH=(x,cls,pill)=>'<div class="dcard '+cls+'"><div class="top"><b>'+esc(x.c.name)+'</b>'+pill+'</div>'
+      +(x.no.length?'<div class="why bad">Не подходит: '+esc(x.no.join('; '))+'</div>':
+        '<div class="nums">'+(x.rate!=null?'<span class="rbig">'+fmt(x.rate)+'%</span>':'<span class="rbig">?</span>')+(x.pay?'<span>Платёж ≈ <b>'+rub(x.pay)+'</b>/мес.</span>':'')+'<span>Моё КВ ≈ <b>'+(x.kv!=null?rub(x.kv):'?')+'</b></span></div>'
+        +(x.parts&&x.parts.length>1?'<div class="why">'+esc(x.parts.join(' '))+' = '+fmt(x.rate)+'%</div>':'')
+        +(x.unk.length?'<div class="why">Уточнить: '+esc(x.unk.join(', '))+'</div>':'')+(x.notes.length?'<div class="why">'+esc(x.notes.join(' · '))+'</div>':''))
+      +'<button class="linkbtn" data-open="'+x.c.id+'">Открыть карточку</button></div>';
+    let h='';
+    h+=ok.length?ok.map(x=>cardH(x,'','<span class="pill">Подходит</span>')).join(''):'<p class="none">Банков, где подтверждены все условия, нет — смотрите «Возможно».</p>';
+    if(part.length) h+='<div class="lbl">Возможно — не хватает данных</div>'+part.map(x=>cardH(x,'part','<span class="pill warn">Уточнить</span>')).join('');
+    if(bad.length) h+='<details><summary><span class="nm">Не подходят ('+bad.length+')</span></summary><div class="body" style="padding-left:14px">'+bad.map(x=>cardH(x,'no','<span class="pill bad">Нет</span>')).join('')+'</div></details>';
+    if(empty.length) h+='<p class="none">Нет данных: '+esc(empty.map(x=>x.c.name).join(', '))+'</p>';
+    h+='<p class="none">Ставка — оценка по данным в базе; платёж — аннуитет; КВ — от суммы кредита.</p>';
+    $('d-out').innerHTML=h;
+  }
+  $('dform').addEventListener('input',full); $('dform').addEventListener('change',full); $('d-sort').addEventListener('change',full);
+  $('d-out').addEventListener('click',e=>{const b=e.target.closest('[data-open]'); if(!b) return; cur=b.dataset.open; on=null; card(); show('t-bank'); window.scrollTo(0,0);});
+  if(store.get('bk2-mode')==='full'){ $('mode').querySelector('[data-m=full]').click(); }
+
+  card(); tbl(); secAll(); pick();
+  const t=store.get('bk2-tab'); if(t&&$(t)) show(t);
+})();
+</script>
+
+<script>if ('serviceWorker' in navigator) {window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));}</script></body></html>
